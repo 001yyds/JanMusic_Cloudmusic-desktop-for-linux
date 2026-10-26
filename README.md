@@ -1,6 +1,6 @@
 # JanMusic
 
-一个为 Linux 桌面做的网易云音乐客户端。
+一个网易云音乐客户端：Linux 桌面版（Electron）+ Android 手机版（Capacitor）。
 
 ## 功能
 
@@ -38,13 +38,32 @@ janmusic          # 或从应用菜单启动
 ./JanMusic-1.1.0-x86_64.AppImage --appimage-extract-and-run
 ```
 
+## Android
+
+APK 下载：[JanMusic-1.1.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.1-android/JanMusic-1.1.0-android.apk)
+
+- 扫码登录、歌单、每日推荐、搜索、歌词、播放队列
+- 播放 / 暂停、上一首 / 下一首、进度拖动、音质切换
+- 歌曲下载到 `Documents/JanMusic`，已下载歌曲优先从本地播放
+- 支持 Android 7.0（API 24）及以上；需要允许安装未知来源应用
+
+从源码构建：
+
+```bash
+pnpm install
+pnpm mobile:sync   # 构建 out/mobile 并同步到 android/
+pnpm mobile:apk    # 输出 android/app/build/outputs/apk/release/app-release.apk
+```
+
+需要 JDK 21 与 Android SDK 36。release 签名从 `android/keystore.properties` 读取，该文件不提交到仓库。
+
 ## 数据与隐私
 
-- 登录 Cookie 保存在 `~/.config/JanMusic/session.bin`，优先使用系统密钥环加密
-- 设置与下载记录：`~/.config/JanMusic/settings.json`
-- 音频缓存：`~/.config/JanMusic/audio-cache/`
-- 封面缓存：`~/.config/JanMusic/image-cache/`（可在「我的下载」页清理）
-- 所有请求都由主进程发出，渲染层不接触账号凭据
+- 登录 Cookie：桌面版保存在 `~/.config/JanMusic/session.bin`（优先使用系统密钥环加密）；Android 版保存在应用私有存储
+- 设置与下载记录：桌面版 `~/.config/JanMusic/settings.json`；Android 版使用应用存储
+- 音频缓存：`~/.config/JanMusic/audio-cache/`（桌面版）
+- 封面缓存：`~/.config/JanMusic/image-cache/`（桌面版，可在「我的下载」页清理）
+- 桌面版所有请求都由主进程发出；Android 版通过 WebView 内的原生 HTTP 桥接发出，不经过第三方服务器
 
 ## 快捷键
 
@@ -66,5 +85,7 @@ janmusic          # 或从应用菜单启动
 src/main/          主进程：窗口、网易云 API（weapi 加密）、媒体代理与缓存、下载
 src/preload/       contextBridge 类型安全桥接
 src/renderer/      React + Tailwind v4 + framer-motion 界面
+src/mobile/        Android 入口、WebView 内网易云客户端与文件下载
 src/shared/        主进程 / 渲染层共享类型
+android/           Capacitor Android 工程
 ```

@@ -26,10 +26,12 @@ import { api, songAlbum, songArtists, songCover } from '../lib/api'
 import { rgba, useDominantColor } from '../lib/color'
 import { cn } from '../lib/cn'
 import { formatClock } from '../lib/format'
+import { isMobile } from '../lib/platform'
 import { useLikesStore } from '../store/likes'
 import { usePlayerStore, type PlayMode } from '../store/player'
 import { useSettingsStore } from '../store/settings'
 import { useUiStore } from '../store/ui'
+import { MobileNowPlaying } from '../mobile/MobileNowPlaying'
 import { Cover } from './Cover'
 import { QualityMenu } from './QualityMenu'
 import { Slider } from './Slider'
@@ -41,7 +43,7 @@ const MODE_ICON: Record<PlayMode, typeof Repeat> = {
   shuffle: Shuffle
 }
 
-export function NowPlaying(): React.JSX.Element {
+function DesktopNowPlaying(): React.JSX.Element {
   const open = useUiStore((state) => state.nowPlaying)
   const setOpen = useUiStore((state) => state.setNowPlaying)
   const lyricsOpen = useUiStore((state) => state.lyricsOpen)
@@ -399,4 +401,8 @@ export function NowPlaying(): React.JSX.Element {
       )}
     </AnimatePresence>
   )
+}
+
+export function NowPlaying(): React.JSX.Element {
+  return isMobile() ? <MobileNowPlaying /> : <DesktopNowPlaying />
 }

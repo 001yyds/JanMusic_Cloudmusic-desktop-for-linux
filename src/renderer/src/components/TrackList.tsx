@@ -125,7 +125,7 @@ export function TrackList({ songs, showAlbum = true, showIndex = true, dense }: 
 
             <div className="tabular text-right text-[11.5px] text-black/35">{formatDuration(songDuration(song))}</div>
 
-            <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <div className="flex items-center justify-end gap-0.5 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100">
               <RowAction title={isLiked ? '取消喜欢' : '喜欢'} active={isLiked} onClick={() => void useLikesStore.getState().toggle(song)}>
                 <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
               </RowAction>

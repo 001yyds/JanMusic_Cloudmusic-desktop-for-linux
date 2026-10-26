@@ -1,4 +1,5 @@
 import type { Album, Song } from '../../../shared/types'
+import { isMobile } from './platform'
 
 export const api = window.ncm
 
@@ -6,10 +7,13 @@ export function coverUrl(url: string | undefined, size = 400): string {
   if (!url) return ''
   const normalized = url.replace(/^http:\/\//, 'https://')
   const separator = normalized.includes('?') ? '&' : '?'
-  return `ncm://image/?u=${encodeURIComponent(`${normalized}${separator}param=${size}y${size}`)}`
+  const target = `${normalized}${separator}param=${size}y${size}`
+  if (isMobile()) return target
+  return `ncm://image/?u=${encodeURIComponent(target)}`
 }
 
 export function audioUrl(id: number, upstream: string, level: string, type: string, size = 0): string {
+  if (isMobile()) return upstream.replace(/^http:\/\//, 'https://')
   const ext = /^(mp3|flac|m4a|aac|ogg)$/i.test(type) ? type.toLowerCase() : 'mp3'
   return `ncm://audio/${id}?u=${encodeURIComponent(upstream)}&q=${level}&e=${ext}&s=${size}`
 }

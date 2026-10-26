@@ -12,19 +12,36 @@ interface CoverProps {
 
 export function Cover({ src, alt = '', radius = 16, className, imgClassName }: CoverProps): React.JSX.Element {
   const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     setFailed(false)
+    setAttempt(0)
   }, [src])
+
+  useEffect(() => {
+    if (!failed || !src || attempt >= 2) return
+    const timer = window.setTimeout(() => {
+      setFailed(false)
+      setAttempt((value) => value + 1)
+    }, 1200)
+    return () => window.clearTimeout(timer)
+  }, [failed, src, attempt])
+
+  const resolved = src
+    ? attempt
+      ? `${src}${src.includes('?') ? '&' : '?'}_retry=${attempt}`
+      : src
+    : ''
 
   return (
     <div
       className={cn('relative overflow-hidden bg-black/[0.04]', className)}
       style={{ borderRadius: radius }}
     >
-      {src && !failed ? (
+      {resolved && !failed ? (
         <img
-          src={src}
+          src={resolved}
           alt={alt}
           draggable={false}
           loading="lazy"

@@ -13,9 +13,18 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "start": "electron-vite preview",
-    "dist": "electron-vite build && electron-builder --linux AppImage"
+    "dist": "electron-vite build && electron-builder --linux AppImage",
+    "mobile:build": "vite build --config mobile.vite.config.ts",
+    "mobile:sync": "pnpm mobile:build && cap sync android",
+    "mobile:apk": "pnpm mobile:sync && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
     "clsx": "^2.1.1",
     "framer-motion": "^14.6.0",
     "lucide-react": "^1.61.0",
@@ -25,6 +34,7 @@
     "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.5",
     "@types/qrcode": "^1.5.6",

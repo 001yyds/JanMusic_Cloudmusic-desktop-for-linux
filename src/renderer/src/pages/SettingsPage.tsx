@@ -19,6 +19,7 @@ import type { AppInfo, Quality } from '../../../shared/types'
 import { cn } from '../lib/cn'
 import { coverUrl } from '../lib/api'
 import { formatBytes } from '../lib/format'
+import { isMobile } from '../lib/platform'
 import { clearPlaylistCache } from '../lib/playlistCache'
 import { useAuthStore } from '../store/auth'
 import { useLikesStore } from '../store/likes'
@@ -45,7 +46,7 @@ function Section({
   children: React.ReactNode
 }): React.JSX.Element {
   return (
-    <section className="glass-panel rounded-[24px] border border-white/45 p-5">
+    <section className="glass-panel rounded-[22px] border border-white/45 p-4 sm:rounded-[24px] sm:p-5">
       <div className="flex items-baseline justify-between px-1">
         <h2 className="text-[13px] font-medium text-black/80">{title}</h2>
         <span className="text-[9.5px] uppercase tracking-[0.24em] text-black/35">{caption}</span>
@@ -164,16 +165,16 @@ export function SettingsPage(): React.JSX.Element {
   }
 
   return (
-    <div className="relative min-h-full px-8 pb-12 pt-7">
+    <div className="relative min-h-full px-4 pb-8 pt-5 sm:px-8 sm:pb-12 sm:pt-7">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(60%_100%_at_30%_0%,rgba(255,25,73,0.07),transparent_70%)]" />
 
-      <header className="relative mb-6 flex items-end justify-between">
+      <header className="relative mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
-          <p className="text-[10.5px] uppercase tracking-[0.3em] text-black/35">Preferences</p>
-          <h1 className="mt-2.5 text-[32px] font-semibold leading-none tracking-[-0.02em] text-black/90">设置</h1>
-          <p className="mt-2.5 text-[12.5px] text-black/40">调整播放、歌词、下载与本地存储。</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-black/35 sm:text-[10.5px]">Preferences</p>
+          <h1 className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] text-black/90 sm:mt-2.5 sm:text-[32px]">设置</h1>
+          <p className="mt-2 text-[12px] text-black/40 sm:mt-2.5 sm:text-[12.5px]">调整播放、歌词、下载与本地存储。</p>
         </div>
-        <div className="glass-soft flex items-center gap-2 rounded-full border border-white/40 px-3.5 py-1.5 text-[11px] text-black/50">
+        <div className="glass-soft hidden items-center gap-2 rounded-full border border-white/40 px-3.5 py-1.5 text-[11px] text-black/50 sm:flex">
           <ShieldCheck size={13} className="text-brand" />
           数据仅保存在本机
         </div>
@@ -245,7 +246,7 @@ export function SettingsPage(): React.JSX.Element {
           </div>
 
           <Row icon={Volume2} title="默认音量" hint={`${Math.round(volume * 100)}%`}>
-            <Slider value={volume} max={1} onChange={setVolume} className="w-[170px]" />
+            <Slider value={volume} max={1} onChange={setVolume} className="w-[120px] sm:w-[170px]" />
           </Row>
 
           <div className="px-1 py-3.5">
@@ -264,7 +265,7 @@ export function SettingsPage(): React.JSX.Element {
                 onCommit={(value) =>
                   void useSettingsStore.getState().patch({ lyricFontSize: 16 + Math.round(value) })
                 }
-                className="w-[170px]"
+                className="w-[120px] sm:w-[170px]"
               />
             </div>
             <div
@@ -278,30 +279,44 @@ export function SettingsPage(): React.JSX.Element {
 
         <Section title="下载与存储" caption="Storage">
           <Row icon={FolderOpen} title="下载目录" hint={settings?.downloadDir ?? '默认音乐文件夹'}>
-            <ActionButton onClick={() => void chooseDir()}>选择目录</ActionButton>
+            {!isMobile() && <ActionButton onClick={() => void chooseDir()}>选择目录</ActionButton>}
             <button
-              onClick={() => void window.ncm.downloads.openFolder()}
-              title="打开下载目录"
+              onClick={() => {
+                void window.ncm.downloads.openFolder().then((path) => {
+                  if (isMobile()) toast(`已保存到 ${path}`, 'info')
+                })
+              }}
+              title={isMobile() ? '下载位置' : '打开下载目录'}
               className="flex h-7 w-7 items-center justify-center rounded-full text-black/40 transition-all duration-200 hover:bg-white/35 hover:text-black active:scale-90"
             >
               <FolderOpen size={13} />
             </button>
           </Row>
 
-          <Row icon={HardDrive} title="本地缓存" hint={`音频 ${formatBytes(cache.audio)} · 图片 ${formatBytes(cache.images)}`}>
-            <ActionButton onClick={() => void clearCache()} disabled={clearing || cacheSize === 0}>
-              <Trash2 size={11} />
-              {clearing ? '清理中…' : '清理'}
-            </ActionButton>
-          </Row>
+          {!isMobile() && (
+            <Row icon={HardDrive} title="本地缓存" hint={`音频 ${formatBytes(cache.audio)} · 图片 ${formatBytes(cache.images)}`}>
+              <ActionButton onClick={() => void clearCache()} disabled={clearing || cacheSize === 0}>
+                <Trash2 size={11} />
+                {clearing ? '清理中…' : '清理'}
+              </ActionButton>
+            </Row>
+          )}
 
           <Row icon={Download} title="已下载歌曲" hint={`${downloads.length} 首 · ${formatBytes(downloadSize)}`}>
-            <ActionButton onClick={() => void window.ncm.downloads.openFolder()}>打开文件夹</ActionButton>
+            <ActionButton
+              onClick={() => {
+                void window.ncm.downloads.openFolder().then((path) => {
+                  if (isMobile()) toast(`已保存到 ${path}`, 'info')
+                })
+              }}
+            >
+              查看文件
+            </ActionButton>
           </Row>
         </Section>
 
         <Section title="关于" caption="About">
-          <Row icon={Info} title="JanMusic" hint="网易云音乐桌面客户端">
+          <Row icon={Info} title="JanMusic" hint={isMobile() ? '网易云音乐 Android 客户端' : '网易云音乐桌面客户端'}>
             <span className="tabular text-[11px] text-black/40">
               {appInfo ? `v${appInfo.version}` : '—'}
             </span>
@@ -309,10 +324,15 @@ export function SettingsPage(): React.JSX.Element {
           <Row
             icon={Info}
             title="运行环境"
-            hint={appInfo ? `Electron ${appInfo.electron} · Chromium ${appInfo.chrome}` : '读取中…'}
+            hint={appInfo
+              ? isMobile()
+                ? `Android WebView ${appInfo.chrome}`
+                : `Electron ${appInfo.electron} · Chromium ${appInfo.chrome}`
+              : '读取中…'}
           />
           <div className="px-1 py-3.5 text-[10.5px] leading-relaxed text-black/35">
-            音乐数据来自网易云音乐，仅用于个人学习与本地播放。登录凭据使用系统密钥环加密后保存在本机。
+            音乐数据来自网易云音乐，仅用于个人学习与本地播放。
+            {isMobile() ? '登录凭据仅保存在本机的应用存储中。' : '登录凭据使用系统密钥环加密后保存在本机。'}
           </div>
         </Section>
       </div>

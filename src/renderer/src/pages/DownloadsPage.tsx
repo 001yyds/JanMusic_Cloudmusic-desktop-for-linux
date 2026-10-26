@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { FolderOpen, HardDrive, Music4, Trash2 } from 'lucide-react'
 import { coverUrl } from '../lib/api'
 import { formatBytes } from '../lib/format'
+import { isMobile } from '../lib/platform'
 import { useSettingsStore } from '../store/settings'
 import { useUiStore } from '../store/ui'
 import { Cover } from '../components/Cover'
@@ -44,44 +45,60 @@ export function DownloadsPage(): React.JSX.Element {
   }
 
   return (
-    <div className="relative min-h-full px-8 pb-10 pt-7">
+    <div className="relative min-h-full px-4 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] bg-[radial-gradient(55%_100%_at_30%_0%,rgba(255,25,73,0.06),transparent_70%)]" />
 
-      <header className="relative flex items-end justify-between">
+      <header className="relative flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10.5px] uppercase tracking-[0.3em] text-black/35">Downloads</p>
-          <h1 className="mt-2.5 text-[30px] font-semibold leading-none tracking-[-0.02em] text-black/90">我的下载</h1>
-          <p className="mt-2 text-[12px] text-black/40">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-black/35 sm:text-[10.5px]">Downloads</p>
+          <h1 className="mt-2 text-[26px] font-semibold leading-none tracking-[-0.02em] text-black/90 sm:mt-2.5 sm:text-[30px]">我的下载</h1>
+          <p className="mt-2 text-[11.5px] text-black/40 sm:text-[12px]">
             {downloads.length} 首 · 共 {formatBytes(totalSize)}
           </p>
         </div>
         <button
-          onClick={() => void window.ncm.downloads.openFolder()}
+          onClick={() => {
+            void window.ncm.downloads.openFolder().then((path) => {
+              if (isMobile()) toast(`已保存到 ${path}`, 'info')
+            })
+          }}
           className="glass-soft flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11.5px] text-black/55 transition-all duration-200 hover:bg-white/30 hover:text-black active:scale-[0.97]"
         >
           <FolderOpen size={13} />
-          打开下载目录
+          {isMobile() ? '下载位置' : '打开下载目录'}
         </button>
       </header>
 
-      <div className="glass-soft relative mt-5 flex items-center gap-3 rounded-[18px] border border-white/40 px-4 py-3">
+      <div className="glass-soft relative mt-4 flex flex-wrap items-center gap-2.5 rounded-[18px] border border-white/40 px-4 py-3 sm:mt-5 sm:flex-nowrap sm:gap-3">
         <HardDrive size={15} className="shrink-0 text-black/30" />
-        <div className="min-w-0 truncate text-[11.5px] text-black/45">
-          本地缓存 <span className="font-medium text-black/75">{formatBytes(cacheSize)}</span>
-          <span className="mx-2 text-black/15">·</span>
-          播放 15 秒后自动补全整首，离线也能听
+        <div className="min-w-0 flex-1 text-[11px] text-black/45 sm:text-[11.5px]">
+          {isMobile() ? (
+            <>
+              下载位置 <span className="font-medium text-black/75">Documents/JanMusic</span>
+              <span className="mx-1.5 text-black/15">·</span>
+              已下载歌曲可直接离线播放
+            </>
+          ) : (
+            <>
+              本地缓存 <span className="font-medium text-black/75">{formatBytes(cacheSize)}</span>
+              <span className="mx-2 text-black/15">·</span>
+              播放 15 秒后自动补全整首，离线也能听
+            </>
+          )}
         </div>
-        <button
-          onClick={() => void clearCache()}
-          disabled={clearing || cacheSize === 0}
-          className="ml-auto flex shrink-0 items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-[10.5px] text-black/50 transition-all duration-200 enabled:hover:bg-white/40 enabled:hover:text-black disabled:opacity-25"
-        >
-          <Trash2 size={11} />
-          {clearing ? '清理中…' : '清理缓存'}
-        </button>
+        {!isMobile() && (
+          <button
+            onClick={() => void clearCache()}
+            disabled={clearing || cacheSize === 0}
+            className="ml-auto flex shrink-0 items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-[10.5px] text-black/50 transition-all duration-200 enabled:hover:bg-white/40 enabled:hover:text-black disabled:opacity-25"
+          >
+            <Trash2 size={11} />
+            {clearing ? '清理中…' : '清理缓存'}
+          </button>
+        )}
       </div>
 
-      <div className="glass-panel relative mt-7 rounded-[24px] border border-white/40 p-2">
+      <div className="glass-panel relative mt-5 rounded-[24px] border border-white/40 p-2 sm:mt-7">
         {downloads.length ? (
           <div className="flex flex-col">
             {downloads.map((item) => (

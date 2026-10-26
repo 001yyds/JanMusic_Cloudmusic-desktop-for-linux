@@ -19,6 +19,7 @@ interface UiState {
   route: Route
   history: Route[]
   navigate: (route: Route) => void
+  navigateRoot: (route: Route) => void
   back: () => void
   canGoBack: boolean
   queueOpen: boolean
@@ -44,6 +45,10 @@ export const useUiStore = create<UiState>((set, get) => ({
     if (JSON.stringify(get().route) === JSON.stringify(route)) return
     const history = [...get().history, get().route].slice(-40)
     set({ route, history, canGoBack: history.length > 0 })
+  },
+  navigateRoot: (route) => {
+    if (JSON.stringify(get().route) === JSON.stringify(route)) return
+    set({ route, history: [], canGoBack: false })
   },
   back: () => {
     const history = [...get().history]

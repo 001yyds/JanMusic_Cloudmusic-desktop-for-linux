@@ -3,6 +3,7 @@ import { coverUrl } from '../lib/api'
 import { playPlaylist } from '../lib/actions'
 import { clearPlaylistCache } from '../lib/playlistCache'
 import { formatCount } from '../lib/format'
+import { isMobile } from '../lib/platform'
 import { useAuthStore } from '../store/auth'
 import { useLikesStore } from '../store/likes'
 import { useUiStore } from '../store/ui'
@@ -26,7 +27,7 @@ export function Library(): React.JSX.Element {
           <Logo size={56} />
           <h1 className="mt-7 text-[24px] font-semibold tracking-[-0.02em] text-black/90">登录后开启你的音乐库</h1>
           <p className="mt-2 max-w-[360px] text-center text-[12.5px] leading-relaxed text-black/40">
-            同步网易云音乐账号的歌单、收藏与每日推荐，所有数据只保存在这台电脑上。
+            同步网易云音乐账号的歌单、收藏与每日推荐，所有数据只保存在{isMobile() ? '本机' : '这台电脑上'}。
           </p>
           <button
             onClick={() => setLoginOpen(true)}
@@ -44,24 +45,24 @@ export function Library(): React.JSX.Element {
   const others = playlists.filter((playlist) => playlist.specialType !== 5)
 
   return (
-    <div className="relative min-h-full px-8 pb-10 pt-7">
+    <div className="relative min-h-full px-4 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(65%_100%_at_30%_0%,rgba(255,25,73,0.08),transparent_70%)]" />
 
-      <header className="relative flex items-center gap-5">
+      <header className="relative flex flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-5">
         {profile?.avatarUrl ? (
           <img
             src={coverUrl(profile.avatarUrl, 200)}
             alt=""
-            className="h-[76px] w-[76px] rounded-full object-cover ring-2 ring-white/70"
+            className="h-[64px] w-[64px] rounded-full object-cover ring-2 ring-white/70 sm:h-[76px] sm:w-[76px]"
             draggable={false}
           />
         ) : (
-          <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full bg-brand/12 text-[24px] font-semibold text-brand">
+          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-brand/12 text-[22px] font-semibold text-brand sm:h-[76px] sm:w-[76px] sm:text-[24px]">
             {profile?.nickname?.slice(0, 1) ?? 'M'}
           </div>
         )}
-        <div className="min-w-0">
-          <h1 className="truncate text-[28px] font-semibold leading-tight tracking-[-0.02em] text-black/90">
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[24px] font-semibold leading-tight tracking-[-0.02em] text-black/90 sm:text-[28px]">
             {profile?.nickname ?? '我的音乐'}
           </h1>
           <p className="mt-1 truncate text-[12px] text-black/40">
@@ -90,23 +91,23 @@ export function Library(): React.JSX.Element {
           className="glass-soft ml-auto flex shrink-0 items-center gap-1.5 rounded-full border border-white/40 px-3 py-1.5 text-[11px] text-black/50 transition-all duration-200 hover:bg-white/30 hover:text-black active:scale-[0.97]"
         >
           <LogOut size={12} />
-          退出登录
+          <span className="hidden sm:inline">退出登录</span>
         </button>
       </header>
 
       {likedPlaylist && (
-        <div className="glass-panel relative mt-7 flex items-center gap-5 overflow-hidden rounded-[24px] border border-white/45 p-5">
+        <div className="glass-panel relative mt-6 flex items-center gap-3.5 overflow-hidden rounded-[24px] border border-white/45 p-4 sm:mt-7 sm:gap-5 sm:p-5">
           <Cover
             src={coverUrl(likedPlaylist.coverImgUrl, 300)}
             radius={16}
-            className="h-[112px] w-[112px] shrink-0 shadow-[0_14px_34px_-18px_rgba(0,0,0,0.4)]"
+            className="h-[88px] w-[88px] shrink-0 shadow-[0_14px_34px_-18px_rgba(0,0,0,0.4)] sm:h-[112px] sm:w-[112px]"
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.3em] text-black/40">
               <Heart size={10} className="text-brand" />
               Favorites
             </div>
-            <h2 className="mt-1.5 truncate text-[21px] font-semibold tracking-[-0.02em] text-black/90">我喜欢的音乐</h2>
+            <h2 className="mt-1.5 truncate text-[18px] font-semibold tracking-[-0.02em] text-black/90 sm:text-[21px]">我喜欢的音乐</h2>
             <p className="mt-1 text-[11.5px] text-black/45">
               {likedPlaylist.trackCount ?? likedCount} 首 · 与网易云同步
             </p>

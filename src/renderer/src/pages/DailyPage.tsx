@@ -23,12 +23,12 @@ export function DailyPage(): React.JSX.Element {
   const date = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })
 
   return (
-    <div className="relative min-h-full px-8 pb-10 pt-7">
+    <div className="relative min-h-full px-4 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[340px] bg-[radial-gradient(60%_100%_at_35%_0%,rgba(255,25,73,0.08),transparent_72%)]" />
 
-      <header className="relative flex items-end gap-6">
+      <header className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-end sm:gap-6">
         <div className="glass-tile shrink-0 rounded-[24px] border border-white/40 p-1.5">
-          <div className="grid h-[172px] w-[172px] grid-cols-2 gap-[2px] overflow-hidden rounded-[18px] shadow-[0_18px_44px_-22px_rgba(0,0,0,0.4)]">
+          <div className="grid h-[136px] w-[136px] grid-cols-2 gap-[2px] overflow-hidden rounded-[18px] shadow-[0_18px_44px_-22px_rgba(0,0,0,0.4)] sm:h-[172px] sm:w-[172px]">
             {(daily.length ? daily.slice(0, 4) : [null, null, null, null]).map((song, index) =>
               song ? (
                 <Cover key={song.id} src={songCover(song, 240)} radius={0} className="h-full w-full" />
@@ -44,7 +44,7 @@ export function DailyPage(): React.JSX.Element {
             <Sparkles size={10} className="text-brand" />
             Daily Mix
           </div>
-          <h1 className="mt-2 text-[32px] font-semibold leading-tight tracking-[-0.02em] text-black/90">每日推荐</h1>
+          <h1 className="mt-2 text-[27px] font-semibold leading-tight tracking-[-0.02em] text-black/90 sm:text-[32px]">每日推荐</h1>
           <p className="mt-2 text-[11.5px] text-black/40">
             {date} · {daily.length} 首 · 每天 6:00 更新
           </p>

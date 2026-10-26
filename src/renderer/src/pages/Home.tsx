@@ -39,22 +39,22 @@ export function Home(): React.JSX.Element {
   const likedPlaylist = authPlaylists.find((playlist) => playlist.specialType === 5)
 
   return (
-    <div className="relative min-h-full px-8 pb-10 pt-7">
+    <div className="relative min-h-full px-4 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(70%_100%_at_25%_0%,rgba(255,25,73,0.08),transparent_70%)]" />
 
-      <header className="relative mb-7 flex items-end justify-between">
+      <header className="relative mb-6 flex items-end justify-between gap-3 sm:mb-7">
         <div>
-          <p className="text-[10.5px] uppercase tracking-[0.3em] text-black/35">{todayLabel()}</p>
-          <h1 className="mt-2.5 text-[32px] font-semibold leading-none tracking-[-0.02em] text-black/90">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-black/35 sm:text-[10.5px]">{todayLabel()}</p>
+          <h1 className="mt-2 text-[27px] font-semibold leading-none tracking-[-0.02em] text-black/90 sm:mt-2.5 sm:text-[32px]">
             {greeting()}
             {profile ? `，${profile.nickname}` : ''}
           </h1>
-          <p className="mt-2.5 text-[12.5px] text-black/40">今天想听点什么？</p>
+          <p className="mt-2 text-[12px] text-black/40 sm:mt-2.5 sm:text-[12.5px]">今天想听点什么？</p>
         </div>
         {loggedIn && (
           <button
             onClick={() => navigate({ page: 'library' })}
-            className="glass-soft flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11.5px] text-black/55 transition-all duration-200 hover:bg-white/30 hover:text-black active:scale-[0.97]"
+            className="glass-soft hidden items-center gap-2 rounded-full px-3.5 py-1.5 text-[11.5px] text-black/55 transition-all duration-200 hover:bg-white/30 hover:text-black active:scale-[0.97] sm:flex"
           >
             <Sparkles size={13} className="text-brand" />
             我的音乐库
@@ -83,10 +83,10 @@ export function Home(): React.JSX.Element {
                     background: `linear-gradient(100deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.14) 52%, ${rgba(heroColor, 0.3)} 100%)`
                   }}
                 />
-                <div className="relative z-10 flex h-full flex-col justify-between p-6">
+                <div className="relative z-10 flex h-full flex-col justify-between p-5 sm:p-6">
                   <div>
                     <div className="text-[9.5px] uppercase tracking-[0.34em] text-black/40">Daily Mix</div>
-                    <h2 className="mt-2 text-[26px] font-semibold tracking-[-0.02em] text-black/90">每日推荐</h2>
+                    <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-black/90 sm:text-[26px]">每日推荐</h2>
                     <p className="mt-1.5 text-[11.5px] text-black/50">
                       根据你的口味生成 · {daily.length || 30} 首
                     </p>
@@ -118,11 +118,11 @@ export function Home(): React.JSX.Element {
                 </div>
               </div>
             ) : (
-              <div className="glass-panel relative col-span-3 h-[208px] overflow-hidden rounded-[22px] border border-white/50 p-7 min-[1100px]:col-span-2">
+              <div className="glass-panel relative col-span-3 h-[208px] overflow-hidden rounded-[22px] border border-white/50 p-5 min-[1100px]:col-span-2 sm:p-7">
                 <div className="relative z-10 flex h-full flex-col justify-between">
                   <div>
                     <div className="text-[9.5px] uppercase tracking-[0.34em] text-black/35">NetEase Cloud Music</div>
-                    <h2 className="mt-2 text-[26px] font-semibold tracking-[-0.02em] text-black/90">登录网易云音乐</h2>
+                    <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-black/90 sm:text-[26px]">登录网易云音乐</h2>
                     <p className="mt-1.5 text-[11.5px] text-black/50">
                       扫码登录后同步你的歌单、每日推荐与喜欢
                     </p>
@@ -136,7 +136,7 @@ export function Home(): React.JSX.Element {
                 </div>
                 <div className="pointer-events-none absolute -right-10 -top-16 h-[260px] w-[260px] rounded-full bg-brand/10 blur-[70px]" />
                 {playlists[0] && (
-                  <div className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 xl:hidden">
+                  <div className="pointer-events-none absolute right-5 top-1/2 hidden -translate-y-1/2 sm:block xl:hidden">
                     <div className="rotate-[5deg]">
                       <Cover
                         src={coverUrl(playlists[0].coverImgUrl ?? playlists[0].picUrl, 400)}

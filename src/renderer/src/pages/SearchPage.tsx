@@ -105,18 +105,18 @@ export function SearchPage({ initialKeyword }: { initialKeyword?: string }): Rea
   ]
 
   return (
-    <div className="relative min-h-full px-8 pb-10 pt-8">
+    <div className="relative min-h-full px-4 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-8">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] bg-[radial-gradient(60%_100%_at_40%_0%,rgba(255,25,73,0.06),transparent_70%)]" />
 
       <div className="relative mx-auto max-w-[900px]">
-        <div className="glass flex items-center gap-3 rounded-[20px] border border-white/45 px-5 py-3.5 transition-colors duration-200 focus-within:border-white/70">
-          <Search size={20} className={cn('shrink-0 transition-colors duration-200', keyword ? 'text-brand' : 'text-black/35')} />
+        <div className="glass flex items-center gap-2.5 rounded-[18px] border border-white/45 px-4 py-3 transition-colors duration-200 focus-within:border-white/70 sm:gap-3 sm:rounded-[20px] sm:px-5 sm:py-3.5">
+          <Search size={18} className={cn('shrink-0 transition-colors duration-200 sm:h-5 sm:w-5', keyword ? 'text-brand' : 'text-black/35')} />
           <input
             ref={inputRef}
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="搜索歌曲、歌手、歌单"
-            className="w-full bg-transparent text-[24px] font-medium tracking-[-0.02em] text-black/90 outline-none placeholder:text-black/20"
+            className="w-full bg-transparent text-[17px] font-medium tracking-[-0.02em] text-black/90 outline-none placeholder:text-black/20 sm:text-[24px]"
             spellCheck={false}
           />
           {loading && <Loader2 size={18} className="animate-spin text-black/30" />}
@@ -134,7 +134,7 @@ export function SearchPage({ initialKeyword }: { initialKeyword?: string }): Rea
         </div>
 
         {searched && (
-          <div className="mt-5 flex items-center gap-6">
+          <div className="no-scrollbar mt-4 flex items-center gap-5 overflow-x-auto sm:mt-5 sm:gap-6">
             {tabs.map((item) => (
               <button
                 key={item.key}
@@ -185,7 +185,7 @@ export function SearchPage({ initialKeyword }: { initialKeyword?: string }): Rea
           )}
 
           {keyword && searched && tab === 'artists' && (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:gap-6">
               {artists.length ? (
                 artists.map((artist) => (
                   <div key={artist.id} className="glass-tile flex flex-col items-center rounded-[22px] border border-white/40 p-4 text-center">

@@ -7,3 +7,11 @@ build/arch/*.pkg.tar.*
 .commandcode
 *.log
 *.tsbuildinfo
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+android/keystore.properties
+android/*.keystore
+*.jks
+.gradle

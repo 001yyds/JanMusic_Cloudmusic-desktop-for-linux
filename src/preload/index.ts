@@ -5,6 +5,7 @@ const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
   ipcRenderer.invoke(channel, ...args) as Promise<T>
 
 const api = {
+  platform: 'desktop' as const,
   auth: {
     qrCreate: () => invoke<{ key: string }>('auth:qr:create'),
     qrCheck: (key: string) => invoke<{ code: number; message?: string }>('auth:qr:check', key),

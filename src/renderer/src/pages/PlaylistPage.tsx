@@ -44,9 +44,9 @@ export function PlaylistPage({ id }: { id: number }): React.JSX.Element {
 
   if (loading && !playlist) {
     return (
-      <div className="px-8 pt-10">
+      <div className="px-4 pt-6 sm:px-8 sm:pt-10">
         <div className="flex items-end gap-6">
-          <div className="skeleton h-[186px] w-[186px] rounded-[20px]" />
+          <div className="skeleton h-[128px] w-[128px] rounded-[20px] sm:h-[186px] sm:w-[186px]" />
           <div className="flex-1 space-y-3 pb-2">
             <div className="skeleton h-3 w-24 rounded" />
             <div className="skeleton h-8 w-2/3 rounded" />
@@ -92,19 +92,19 @@ export function PlaylistPage({ id }: { id: number }): React.JSX.Element {
         <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/25 to-transparent" />
       </div>
 
-      <div className="relative px-8 pt-9">
-        <div className="flex items-end gap-6">
+      <div className="relative px-4 pt-6 sm:px-8 sm:pt-9">
+        <div className="flex items-end gap-4 sm:gap-6">
           <Cover
             src={cover}
-            radius={20}
-            className="h-[186px] w-[186px] shrink-0 shadow-[0_22px_50px_-22px_rgba(0,0,0,0.4)]"
+            radius={18}
+            className="h-[128px] w-[128px] shrink-0 shadow-[0_22px_50px_-22px_rgba(0,0,0,0.4)] sm:h-[186px] sm:w-[186px]"
           />
           <div className="min-w-0 flex-1 pb-1">
-            <div className="text-[9.5px] uppercase tracking-[0.32em] text-black/40">Playlist</div>
-            <h1 className="mt-2 line-clamp-2 text-[28px] font-semibold leading-tight tracking-[-0.02em] text-black/90 xl:text-[32px]">
+            <div className="text-[9px] uppercase tracking-[0.3em] text-black/40 sm:text-[9.5px] sm:tracking-[0.32em]">Playlist</div>
+            <h1 className="mt-1.5 line-clamp-3 text-[22px] font-semibold leading-tight tracking-[-0.02em] text-black/90 sm:mt-2 sm:text-[28px] xl:text-[32px]">
               {playlist.name}
             </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11.5px] text-black/45">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10.5px] text-black/45 sm:mt-3 sm:gap-2 sm:text-[11.5px]">
               {creator?.avatarUrl && (
                 <img
                   src={coverUrl(creator.avatarUrl, 60)}
@@ -126,11 +126,11 @@ export function PlaylistPage({ id }: { id: number }): React.JSX.Element {
               </p>
             )}
 
-            <div className="mt-4 flex items-center gap-2.5">
+            <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-2.5">
               <button
                 onClick={() => playQueue(tracks, 0)}
                 disabled={!tracks.length}
-                className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-brand px-5 py-2 text-[12px] font-medium text-white shadow-[0_8px_22px_rgba(255,25,73,0.28)] transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:opacity-40"
+                className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-brand px-4 py-2 text-[11.5px] font-medium text-white shadow-[0_8px_22px_rgba(255,25,73,0.28)] transition-all duration-200 hover:scale-[1.02] active:scale-95 disabled:opacity-40 sm:px-5 sm:text-[12px]"
               >
                 <Play size={13} fill="currentColor" />
                 播放全部
@@ -138,7 +138,7 @@ export function PlaylistPage({ id }: { id: number }): React.JSX.Element {
               <button
                 onClick={() => addToQueue(tracks)}
                 disabled={!tracks.length}
-                className="glass-soft flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/40 px-4 py-2 text-[11.5px] text-black/60 transition-all duration-200 hover:bg-white/30 hover:text-black disabled:opacity-40"
+                className="glass-soft flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/40 px-3.5 py-2 text-[11px] text-black/60 transition-all duration-200 hover:bg-white/30 hover:text-black disabled:opacity-40 sm:px-4 sm:text-[11.5px]"
               >
                 <ListPlus size={13} />
                 加入队列
@@ -147,7 +147,7 @@ export function PlaylistPage({ id }: { id: number }): React.JSX.Element {
           </div>
         </div>
 
-        <div className="glass-panel mt-8 rounded-[24px] border border-white/40 p-2 pt-3">
+        <div className="glass-panel mt-6 rounded-[24px] border border-white/40 p-2 pt-3 sm:mt-8">
           <div className="mb-1 grid grid-cols-[28px_minmax(0,2.4fr)_52px_88px] items-center gap-3 px-3.5 text-[10px] text-black/35 min-[1040px]:grid-cols-[28px_minmax(0,2.4fr)_minmax(0,1.5fr)_52px_88px]">
             <span className="text-center">#</span>
             <span>标题</span>

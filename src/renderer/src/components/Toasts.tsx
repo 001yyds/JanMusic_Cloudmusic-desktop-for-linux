@@ -14,7 +14,7 @@ export function Toasts(): React.JSX.Element {
   const dismiss = useUiStore((state) => state.dismissToast)
 
   return (
-    <div className="pointer-events-none fixed bottom-[116px] left-1/2 z-[80] flex -translate-x-1/2 flex-col items-center gap-2">
+    <div className="pointer-events-none fixed bottom-[170px] left-1/2 z-[80] flex w-[calc(100vw-32px)] max-w-[520px] -translate-x-1/2 flex-col items-center gap-2 sm:bottom-[116px] sm:w-auto">
       <AnimatePresence>
         {toasts.map((toast) => {
           const Icon = ICONS[toast.kind]

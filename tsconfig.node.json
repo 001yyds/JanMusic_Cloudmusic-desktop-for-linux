@@ -12,5 +12,12 @@
     "allowUmdGlobalAccess": true,
     "types": ["node", "electron"]
   },
-  "include": ["electron.vite.config.ts", "src/main/**/*.ts", "src/preload/**/*.ts", "src/shared/**/*.ts"]
+  "include": [
+    "electron.vite.config.ts",
+    "mobile.vite.config.ts",
+    "capacitor.config.ts",
+    "src/main/**/*.ts",
+    "src/preload/**/*.ts",
+    "src/shared/**/*.ts"
+  ]
 }

@@ -155,6 +155,30 @@ async function start(song: Song, autoplay: boolean): Promise<void> {
     trial: false
   })
   updateSession(song)
+  clearTimeout(warmTimer)
+  try {
+    const local = await api.media.local?.(song.id)
+    if (myToken !== token) return
+    if (local) {
+      audio.src = local
+      audio.volume = usePlayerStore.getState().muted ? 0 : usePlayerStore.getState().volume
+      usePlayerStore.setState({ trial: false })
+      if (!autoplay) {
+        usePlayerStore.setState({ loading: false })
+        return
+      }
+      try {
+        await audio.play()
+        usePlayerStore.setState({ playing: true, loading: false })
+        return
+      } catch {
+        // fall back to streaming when the local file cannot be played
+      }
+    }
+  } catch {
+    // fall back to streaming
+  }
+
   try {
     const result = await api.song.url(song.id, usePlayerStore.getState().quality)
     if (myToken !== token) return
@@ -167,7 +191,6 @@ async function start(song: Song, autoplay: boolean): Promise<void> {
     audio.volume = usePlayerStore.getState().muted ? 0 : usePlayerStore.getState().volume
     usePlayerStore.setState({ trial: result.trial })
 
-    clearTimeout(warmTimer)
     if (!result.trial && result.upstream) {
       const payload = {
         id: song.id,

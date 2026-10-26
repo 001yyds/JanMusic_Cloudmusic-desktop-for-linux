@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, RefreshCw, ShieldCheck, X } from 'lucide-react'
 import QRCode from 'qrcode'
 import { api } from '../lib/api'
+import { isMobile } from '../lib/platform'
 import { useAuthStore } from '../store/auth'
 import { useContentStore } from '../store/content'
 import { useLikesStore } from '../store/likes'
@@ -110,7 +111,7 @@ export function LoginModal(): React.JSX.Element {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-            className="glass-strong relative w-[368px] overflow-hidden rounded-[30px] border border-white/50 p-7 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)]"
+            className="glass-strong relative w-[min(368px,calc(100vw-32px))] overflow-hidden rounded-[28px] border border-white/50 p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)] sm:rounded-[30px] sm:p-7"
           >
             <div className="liquid-sheen" />
             <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-brand/10 blur-[80px]" />
@@ -128,7 +129,7 @@ export function LoginModal(): React.JSX.Element {
             </div>
 
             <div className="relative mt-6 flex justify-center">
-              <div className="relative flex h-[220px] w-[220px] items-center justify-center rounded-[20px] bg-white p-2.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.65)]">
+              <div className="relative flex h-[200px] w-[200px] items-center justify-center rounded-[20px] bg-white p-2.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.65)] sm:h-[220px] sm:w-[220px]">
                 {qr ? (
                   <img src={qr} alt="登录二维码" className="h-full w-full rounded-[14px]" draggable={false} />
                 ) : (
@@ -167,7 +168,7 @@ export function LoginModal(): React.JSX.Element {
 
             <div className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-black/30">
               <ShieldCheck size={11} />
-              登录凭据仅保存在本机，并使用系统密钥环加密
+              {isMobile() ? '登录凭据仅保存在本机的应用存储中' : '登录凭据仅保存在本机，并使用系统密钥环加密'}
             </div>
           </motion.div>
         </motion.div>
