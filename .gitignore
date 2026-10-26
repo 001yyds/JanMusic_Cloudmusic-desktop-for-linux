@@ -1,0 +1,9 @@
+node_modules
+out
+release
+build/arch/pkg
+build/arch/src
+build/arch/*.pkg.tar.*
+.commandcode
+*.log
+*.tsbuildinfo

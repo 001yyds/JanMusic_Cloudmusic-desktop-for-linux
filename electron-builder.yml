@@ -1,0 +1,30 @@
+appId: com.janmusic.player
+productName: JanMusic
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+asar: true
+linux:
+  target:
+    - AppImage
+    - deb
+  category: AudioVideo
+  icon: build/icon.png
+  executableName: janmusic
+  maintainer: jvvoch <jvvoch@localhost>
+  vendor: JanMusic
+  synopsis: 网易云音乐桌面客户端
+  description: JanMusic 是一个基于 Electron 的网易云音乐桌面客户端，支持扫码登录、歌单同步、搜索、播放与离线缓存。
+  syncDesktopName: true
+  desktop:
+    entry:
+      Name: JanMusic
+      Comment: 网易云音乐客户端
+      Comment[zh_CN]: 网易云音乐客户端
+      Categories: AudioVideo;Audio;Player;
+      Keywords: music;netease;player;
+      StartupWMClass: janmusic
+  artifactName: ${productName}-${version}-${arch}.${ext}

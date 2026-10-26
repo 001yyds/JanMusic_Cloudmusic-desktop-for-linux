@@ -1,0 +1,64 @@
+# Maintainer: jvvoch <jvvoch@localhost>
+pkgname=janmusic
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="网易云音乐桌面客户端"
+arch=('x86_64')
+url="https://github.com/jvvoch/janmusic"
+license=('MIT')
+depends=(
+  'gtk3'
+  'nss'
+  'alsa-lib'
+  'libxss'
+  'libxtst'
+  'xdg-utils'
+  'at-spi2-core'
+  'util-linux'
+  'libsecret'
+  'libnotify'
+  'libcups'
+  'libdrm'
+  'mesa'
+  'libxkbcommon'
+  'libxcomposite'
+  'libxdamage'
+  'libxrandr'
+  'pango'
+  'cairo'
+  'gdk-pixbuf2'
+  'nspr'
+  'libx11'
+  'libxcb'
+)
+options=('!strip' '!debug')
+source=()
+sha256sums=()
+
+package() {
+  local src="$startdir/../../release/linux-unpacked"
+
+  install -d "$pkgdir/opt/janmusic"
+  cp -a "$src/." "$pkgdir/opt/janmusic/"
+  chmod 4755 "$pkgdir/opt/janmusic/chrome-sandbox"
+
+  install -d "$pkgdir/usr/bin"
+  ln -s /opt/janmusic/janmusic "$pkgdir/usr/bin/janmusic"
+
+  install -d "$pkgdir/usr/share/applications"
+  cat > "$pkgdir/usr/share/applications/janmusic.desktop" <<'EOF'
+[Desktop Entry]
+Name=JanMusic
+Comment=网易云音乐桌面客户端
+Comment[zh_CN]=网易云音乐桌面客户端
+Exec=janmusic %U
+Icon=janmusic
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Player;
+Keywords=music;netease;player;
+StartupWMClass=janmusic
+EOF
+
+  install -Dm644 "$startdir/../icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/janmusic.png"
+}
