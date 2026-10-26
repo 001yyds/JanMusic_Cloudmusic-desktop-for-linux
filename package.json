@@ -1,6 +1,6 @@
 {
   "name": "janmusic",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "网易云音乐客户端",
   "main": "./out/main/index.js",
   "author": "jvvoch",

@@ -251,15 +251,6 @@
   animation: sheen 18s var(--ease-apple) infinite;
 }
 
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @keyframes eq {
   0%,
   100% {
@@ -307,14 +298,6 @@
   to {
     background-position: 200% 0;
   }
-}
-
-.spin-slow {
-  animation: spin-slow 70s linear infinite;
-}
-
-.spin-slow.paused {
-  animation-play-state: paused;
 }
 
 .eq-bar {

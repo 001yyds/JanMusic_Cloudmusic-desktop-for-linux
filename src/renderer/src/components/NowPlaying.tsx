@@ -206,10 +206,7 @@ export function NowPlaying(): React.JSX.Element {
                     }}
                   />
                   <div
-                    className={cn(
-                      'relative aspect-square transition-[width,height] duration-500',
-                      playing ? 'spin-slow' : 'spin-slow paused'
-                    )}
+                    className="relative aspect-square transition-[width,height] duration-500"
                     style={{ width: lyricsOpen ? 'clamp(180px, 24vh, 250px)' : 'clamp(240px, 38vh, 380px)' }}
                   >
                     <Cover

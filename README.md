@@ -32,10 +32,10 @@ pnpm dist         # 打包 AppImage 到 release/
 janmusic          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/JanMusic-1.0.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/JanMusic-1.1.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./JanMusic-1.0.0-x86_64.AppImage --appimage-extract-and-run
+./JanMusic-1.1.0-x86_64.AppImage --appimage-extract-and-run
 ```
 
 ## 数据与隐私
