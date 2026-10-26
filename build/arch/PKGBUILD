@@ -4,7 +4,7 @@ pkgver=1.0.0
 pkgrel=1
 pkgdesc="网易云音乐桌面客户端"
 arch=('x86_64')
-url="https://github.com/jvvoch/janmusic"
+url="https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux"
 license=('MIT')
 depends=(
   'gtk3'
