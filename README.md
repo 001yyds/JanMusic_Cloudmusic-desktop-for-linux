@@ -4,7 +4,9 @@
 
 ## 功能
 
-- 网易云音乐扫码登录，歌单与「我喜欢的音乐」自动同步
+- 液态玻璃界面：所有面板共用一套材质，边缘折射、指针跟随高光、玻璃厚度描边
+- 桌面端扫码登录；手机端支持扫码、手机号验证码，以及内嵌官方网页登录（风控滑块在网页内完成）
+- 歌单与「我喜欢的音乐」自动同步，收藏页可直接打开歌单
 - 每日推荐、推荐歌单、新歌速递、排行榜
 - 歌单详情、单曲播放、播放队列、顺序/单曲/列表循环/随机
 - 全屏播放页：缓慢旋转封面、动态毛玻璃背景、单行歌词
@@ -25,7 +27,11 @@ pnpm install
 pnpm dev          # 开发模式
 pnpm build        # 编译到 out/
 pnpm dist         # 打包 AppImage 到 release/
+pnpm exec electron-builder --linux AppImage deb   # AppImage + deb
+makepkg -D build/arch -f --noconfirm              # Arch 包
 ```
+
+发版流程与自检清单见 [`CLAUDE.md`](./CLAUDE.md)。
 
 打包后安装（用户级，无需 sudo）：
 
@@ -34,17 +40,28 @@ pnpm dist         # 打包 AppImage 到 release/
 janmusic          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/JanMusic-1.3.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/JanMusic-1.4.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./JanMusic-1.3.0-x86_64.AppImage --appimage-extract-and-run
+./JanMusic-1.4.0-x86_64.AppImage --appimage-extract-and-run
 ```
+
+### 各发行版安装包
+
+| 发行版 | 文件 | 安装 |
+| --- | --- | --- |
+| Arch Linux | `janmusic-1.4.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.4.0-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `JanMusic-1.4.0-amd64.deb` | `sudo apt install ./JanMusic-1.4.0-amd64.deb` |
+| 通用便携 | `JanMusic-1.4.0-x86_64.AppImage` | `chmod +x` 后直接运行 |
+
+下载地址：[Releases](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/latest)
 
 ## Android
 
-APK 下载：[JanMusic-1.3.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.3/JanMusic-1.3.0-android.apk)
+APK 下载：[JanMusic-1.4.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.4.0/JanMusic-1.4.0-android.apk)
 
-- 手机号验证码登录、歌单、每日推荐、搜索、歌词、播放队列
+- 三种登录方式：扫码、手机号验证码、内嵌官方网页登录（可完成滑块验证）
+- 歌单、每日推荐、搜索、歌词、播放队列
 - 播放 / 暂停、上一首 / 下一首、进度拖动、音质切换
 - 歌曲下载到 `Documents/JanMusic`，已下载歌曲优先从本地播放
 - 支持 Android 7.0（API 24）及以上；需要允许安装未知来源应用
