@@ -76,6 +76,10 @@ export interface Settings {
   downloadDir: string
   downloads: DownloadRecord[]
   lyricFontSize: number
+  /** 桌面歌词（仅桌面端，Wayland 下走 layer-shell） */
+  desktopLyrics: boolean
+  desktopLyricsLocked: boolean
+  desktopLyricsFontSize: number
 }
 
 export interface SongUrlResult {

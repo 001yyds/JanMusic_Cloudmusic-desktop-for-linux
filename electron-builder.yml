@@ -6,6 +6,9 @@ directories:
 files:
   - out/**/*
   - package.json
+extraResources:
+  - from: resources/lyrics-overlay.py
+    to: lyrics-overlay.py
 asar: true
 linux:
   target:

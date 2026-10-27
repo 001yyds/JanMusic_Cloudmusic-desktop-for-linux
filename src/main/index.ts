@@ -1,4 +1,5 @@
 import { app, BrowserWindow, globalShortcut, Menu, protocol, shell } from 'electron'
+import { stopDesktopLyrics } from './desktopLyrics'
 import { join } from 'node:path'
 import { registerIpc } from './ipc'
 import { registerMediaProtocol } from './media'
@@ -92,7 +93,10 @@ if (!locked) {
   })
 }
 
-app.on('will-quit', () => globalShortcut.unregisterAll())
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
+  stopDesktopLyrics()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

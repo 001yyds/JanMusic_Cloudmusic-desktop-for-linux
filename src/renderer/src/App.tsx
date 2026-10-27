@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
+import { MotionConfig } from 'framer-motion'
 import { Ambient } from './components/Ambient'
 import { CommentsPanel } from './components/CommentsPanel'
 import { LoginModal } from './components/LoginModal'
@@ -11,6 +11,7 @@ import { Sidebar } from './components/Sidebar'
 import { TitleBar } from './components/TitleBar'
 import { Toasts } from './components/Toasts'
 import { useAppBootstrap } from './lib/bootstrap'
+import { useDesktopLyrics } from './lib/desktopLyrics'
 import { useGlassPointer } from './lib/liquidGlass'
 import { isMobile } from './lib/platform'
 import { MobileApp } from './mobile/MobileApp'
@@ -22,6 +23,7 @@ function DesktopApp(): React.JSX.Element {
   const navigate = useUiStore((state) => state.navigate)
 
   useAppBootstrap()
+  useDesktopLyrics()
 
   useEffect(() => {
     return window.ncm.events.onPlayerCommand((command) => {
@@ -81,18 +83,9 @@ function DesktopApp(): React.JSX.Element {
         <div className="relative flex min-h-0 flex-1">
           <Sidebar />
           <main className="relative min-w-0 flex-1 overflow-hidden">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={pageKey}
-                initial={{ y: 10 }}
-                animate={{ y: 0 }}
-                exit={{ y: -6 }}
-                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full overflow-y-auto"
-              >
-                <PageRouter route={route} />
-              </motion.div>
-            </AnimatePresence>
+            <div key={pageKey} className="page-enter h-full overflow-y-auto">
+              <PageRouter route={route} />
+            </div>
           </main>
           <QueuePanel />
         </div>

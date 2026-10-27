@@ -17,7 +17,10 @@ function defaults(): Settings {
     volume: 0.75,
     downloadDir: join(app.getPath('music'), 'JanMusic'),
     downloads: [],
-    lyricFontSize: 22
+    lyricFontSize: 22,
+    desktopLyrics: false,
+    desktopLyricsLocked: false,
+    desktopLyricsFontSize: 30
   }
 }
 

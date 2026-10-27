@@ -6,6 +6,8 @@ build/arch/src
 build/arch/*.pkg.tar.*
 .commandcode
 .playwright-mcp
+liquid-glass-*.png
+网易云Windows版本/
 *.log
 *.tsbuildinfo
 android/app/build

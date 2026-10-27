@@ -4,6 +4,13 @@ import { createWriteStream } from 'node:fs'
 import { mkdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DownloadRecord, MediaWarmPayload, Quality, Settings, Song } from '../shared/types'
+import {
+  setDesktopLyricsFont,
+  setDesktopLyricsLocked,
+  setDesktopLyricsVisible,
+  updateDesktopLyrics,
+  type DesktopLyricState
+} from './desktopLyrics'
 import { netease } from './netease/client'
 import { cacheInfo, clearCache, warmAudio } from './media'
 import { addDownload, getSettings, updateSettings } from './store'
@@ -183,5 +190,21 @@ export function registerIpc(): void {
   })
   ipcMain.handle('win:is-maximized', (event) => {
     return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
+  })
+
+  ipcMain.on('lyrics:update', (_event, state: DesktopLyricState) => {
+    updateDesktopLyrics(state)
+  })
+  ipcMain.handle('lyrics:visible', (_event, visible: boolean) => {
+    setDesktopLyricsVisible(visible)
+    return true
+  })
+  ipcMain.handle('lyrics:lock', (_event, locked: boolean) => {
+    setDesktopLyricsLocked(locked)
+    return true
+  })
+  ipcMain.handle('lyrics:font', (_event, size: number) => {
+    setDesktopLyricsFont(size)
+    return true
   })
 }

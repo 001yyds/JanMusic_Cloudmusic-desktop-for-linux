@@ -8,6 +8,7 @@ import {
   Info,
   LogIn,
   LogOut,
+  Monitor,
   ShieldCheck,
   Trash2,
   Type,
@@ -111,6 +112,9 @@ export function SettingsPage(): React.JSX.Element {
   const setVolume = usePlayerStore((state) => state.setVolume)
   const setLoginOpen = useUiStore((state) => state.setLoginOpen)
   const toast = useUiStore((state) => state.toast)
+
+  const desktopLyrics = settings?.desktopLyrics ?? false
+  const desktopLyricsLocked = settings?.desktopLyricsLocked ?? false
 
   const [lyricSize, setLyricSize] = useState(22)
   const [cache, setCache] = useState({ audio: 0, images: 0 })
@@ -279,6 +283,41 @@ export function SettingsPage(): React.JSX.Element {
               诸事顺利！
             </div>
           </div>
+
+          {!isMobile() && (
+            <Row
+              icon={Monitor}
+              title="桌面歌词"
+              hint={
+                desktopLyrics
+                  ? desktopLyricsLocked
+                    ? '已显示 · 已锁定（点击穿透）'
+                    : '已显示 · 可拖动'
+                  : '在桌面上显示同步歌词'
+              }
+            >
+              <ActionButton
+                onClick={() =>
+                  void useSettingsStore
+                    .getState()
+                    .patch({ desktopLyrics: !desktopLyrics })
+                }
+              >
+                {desktopLyrics ? '关闭' : '开启'}
+              </ActionButton>
+              {desktopLyrics && (
+                <ActionButton
+                  onClick={() =>
+                    void useSettingsStore
+                      .getState()
+                      .patch({ desktopLyricsLocked: !desktopLyricsLocked })
+                  }
+                >
+                  {desktopLyricsLocked ? '解锁' : '锁定'}
+                </ActionButton>
+              )}
+            </Row>
+          )}
         </Section>
 
         <Section title="下载与存储" caption="Storage">

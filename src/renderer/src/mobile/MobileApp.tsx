@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { Ambient } from '../components/Ambient'
 import { LoginModal } from '../components/LoginModal'
 import { NowPlaying } from '../components/NowPlaying'
@@ -63,18 +62,9 @@ export function MobileApp(): React.JSX.Element {
       <div className="relative z-10 flex h-full min-h-0 flex-col">
         <MobileHeader />
         <main ref={mainRef} className="no-scrollbar relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={pageKey}
-              initial={{ y: 8 }}
-              animate={{ y: 0 }}
-              exit={{ y: -4 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="min-h-full pb-[168px]"
-            >
-              <PageRouter route={route} />
-            </motion.div>
-          </AnimatePresence>
+          <div key={pageKey} className="page-enter min-h-full pb-[168px]">
+            <PageRouter route={route} />
+          </div>
         </main>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30">
           <div className="pointer-events-auto">

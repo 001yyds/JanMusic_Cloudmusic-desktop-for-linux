@@ -48,6 +48,13 @@ export interface NcmApi {
     /** 仅手机端：打开官方网页登录页，人工完成短信登录与滑块验证 */
     webLogin?(): Promise<{ ok: boolean }>
   }
+  /** 仅桌面端：桌面歌词覆盖层 */
+  lyrics?: {
+    update(state: { current: string; secondary?: string; playing?: boolean }): void
+    setVisible(visible: boolean): Promise<boolean>
+    setLocked(locked: boolean): Promise<boolean>
+    setFont(size: number): Promise<boolean>
+  }
   user: {
     playlists(uid: number): Promise<Playlist[]>
   }

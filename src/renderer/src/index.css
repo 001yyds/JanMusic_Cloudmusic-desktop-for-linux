@@ -263,6 +263,26 @@
   }
 }
 
+@keyframes page-enter {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 页面切换：新页立即挂载，只做 180ms 入场位移，不阻塞挂载 */
+.page-enter {
+  animation: page-enter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+}
+
 @utility text-balance {
   text-wrap: balance;
 }

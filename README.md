@@ -5,6 +5,7 @@
 ## 功能
 
 - 液态玻璃界面：所有面板共用一套材质，边缘折射、指针跟随高光、玻璃厚度描边
+- 桌面歌词（仅桌面端）：Wayland 下用 wlr-layer-shell 把歌词浮在桌面最上层，可拖动、可锁定穿透、支持翻译行
 - 桌面端扫码登录；手机端支持扫码、手机号验证码，以及内嵌官方网页登录（风控滑块在网页内完成）
 - 歌单与「我喜欢的音乐」自动同步，收藏页可直接打开歌单
 - 每日推荐、推荐歌单、新歌速递、排行榜
@@ -40,25 +41,27 @@ makepkg -D build/arch -f --noconfirm              # Arch 包
 janmusic          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/JanMusic-1.4.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/JanMusic-1.5.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./JanMusic-1.4.0-x86_64.AppImage --appimage-extract-and-run
+./JanMusic-1.5.0-x86_64.AppImage --appimage-extract-and-run
 ```
+
+桌面歌词依赖系统的 GTK3 与 layer-shell（Arch：`sudo pacman -S gtk3 python-gobject gtk-layer-shell`）。
 
 ### 各发行版安装包
 
 | 发行版 | 文件 | 安装 |
 | --- | --- | --- |
-| Arch Linux | `janmusic-1.4.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.4.0-1-x86_64.pkg.tar.zst` |
-| Debian / Ubuntu | `JanMusic-1.4.0-amd64.deb` | `sudo apt install ./JanMusic-1.4.0-amd64.deb` |
-| 通用便携 | `JanMusic-1.4.0-x86_64.AppImage` | `chmod +x` 后直接运行 |
+| Arch Linux | `janmusic-1.5.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.5.0-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `JanMusic-1.5.0-amd64.deb` | `sudo apt install ./JanMusic-1.5.0-amd64.deb` |
+| 通用便携 | `JanMusic-1.5.0-x86_64.AppImage` | `chmod +x` 后直接运行 |
 
 下载地址：[Releases](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/latest)
 
 ## Android
 
-APK 下载：[JanMusic-1.4.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.4.0/JanMusic-1.4.0-android.apk)
+APK 下载：[JanMusic-1.5.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.5.0/JanMusic-1.5.0-android.apk)
 
 - 三种登录方式：扫码、手机号验证码、内嵌官方网页登录（可完成滑块验证）
 - 歌单、每日推荐、搜索、歌词、播放队列
@@ -83,6 +86,17 @@ pnpm mobile:apk    # 输出 android/app/build/outputs/apk/release/app-release.ap
 - 音频缓存：`~/.config/JanMusic/audio-cache/`（桌面版）
 - 封面缓存：`~/.config/JanMusic/image-cache/`（桌面版，可在「我的下载」页清理）
 - 桌面版所有请求都由主进程发出；Android 版通过 WebView 内的原生 HTTP 桥接发出，不经过第三方服务器
+
+## 桌面歌词
+
+设置 → 播放 → 桌面歌词 → 开启。歌词作为独立图层浮在桌面最上层：
+
+- 未锁定时可直接拖动，位置自动保存
+- 点「锁定」后整层点击穿透，不挡其他窗口操作；再点「解锁」恢复
+- 显示当前行 + 翻译（无翻译时显示下一行），播放暂停时自动变淡
+- 基于 Wayland 的 layer-shell：niri、KDE Plasma 6（Wayland）可用；X11 会话暂不支持
+
+位置、锁定状态与字号保存在 `~/.config/JanMusic/desktop-lyrics.json`，异常日志在 `~/.config/JanMusic/desktop-lyrics.log`。
 
 ## 快捷键
 

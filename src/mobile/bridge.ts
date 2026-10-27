@@ -726,7 +726,10 @@ function defaults(): Settings {
     volume: 0.75,
     downloadDir: DOC_LABEL,
     downloads: [],
-    lyricFontSize: 22
+    lyricFontSize: 22,
+    desktopLyrics: false,
+    desktopLyricsLocked: false,
+    desktopLyricsFontSize: 30
   }
 }
 

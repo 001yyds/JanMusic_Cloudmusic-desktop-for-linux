@@ -77,6 +77,13 @@ const api = {
     add: (song: Song, level: Quality) => invoke('download:add', song, level),
     openFolder: () => invoke<string>('download:open-folder')
   },
+  lyrics: {
+    update: (state: { current: string; secondary?: string; playing?: boolean }) =>
+      ipcRenderer.send('lyrics:update', state),
+    setVisible: (visible: boolean) => invoke<boolean>('lyrics:visible', visible),
+    setLocked: (locked: boolean) => invoke<boolean>('lyrics:lock', locked),
+    setFont: (size: number) => invoke<boolean>('lyrics:font', size)
+  },
   win: {
     minimize: () => void ipcRenderer.invoke('win:minimize'),
     toggleMaximize: () => invoke<boolean>('win:toggle-maximize'),
