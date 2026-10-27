@@ -29,10 +29,9 @@ import gi
 
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
-gi.require_version("Pango", "1.0")
 gi.require_version("GtkLayerShell", "0.1")
 import cairo  # noqa: E402
-from gi.repository import Gdk, GLib, Gtk, GtkLayerShell, Pango  # noqa: E402
+from gi.repository import Gdk, GLib, Gtk, GtkLayerShell  # noqa: E402
 
 CONFIG_DIR = os.path.join(
     os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "JanMusic"
@@ -41,21 +40,27 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "desktop-lyrics.json")
 
 DEFAULT_CONFIG = {"x": 160, "y": 640, "locked": False, "font": 30}
 
-CSS = """
+BASE_CSS = """
 window { background: transparent; }
 #lyric {
   color: #ffffff;
-  text-shadow: -2px -2px 0 rgba(0,0,0,0.92), 2px -2px 0 rgba(0,0,0,0.92),
-               -2px 2px 0 rgba(0,0,0,0.92), 2px 2px 0 rgba(0,0,0,0.92),
-               0 3px 10px rgba(0,0,0,0.65);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45);
 }
 #secondary {
-  color: rgba(255,255,255,0.78);
-  text-shadow: -1px -1px 0 rgba(0,0,0,0.85), 1px -1px 0 rgba(0,0,0,0.85),
-               -1px 1px 0 rgba(0,0,0,0.85), 1px 1px 0 rgba(0,0,0,0.85),
-               0 2px 8px rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.8);
+  text-shadow: 0 1px 5px rgba(0,0,0,0.5);
 }
 """
+
+
+def build_css(size):
+    size = int(size)
+    secondary = max(12, int(size * 0.62))
+    return (
+        BASE_CSS
+        + f"#lyric {{ font-size: {size}px; font-weight: 600; }}\n"
+        + f"#secondary {{ font-size: {secondary}px; }}\n"
+    )
 
 
 def load_config():
@@ -80,9 +85,11 @@ def save_config(config):
         pass
 
 
-def font_description(size, bold):
-    family = "'Noto Sans CJK SC','Noto Sans SC','MiSans',sans-serif"
-    return Pango.FontDescription.from_string(f"{'Bold ' if bold else ''}{int(size)}px {family}")
+def font_family_css():
+    return (
+        "window, #lyric, #secondary {"
+        " font-family: 'Noto Sans CJK SC','Noto Sans SC','MiSans',sans-serif; }"
+    )
 
 
 class Overlay:
@@ -137,10 +144,9 @@ class Overlay:
         self.box.pack_start(self.current_label, False, False, 0)
         self.box.pack_start(self.secondary_label, False, False, 0)
 
-        provider = Gtk.CssProvider()
-        provider.load_from_data(CSS.encode("utf-8"))
+        self.provider = Gtk.CssProvider()
         Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            Gdk.Screen.get_default(), self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
         self.apply_font()
 
@@ -214,8 +220,8 @@ class Overlay:
 
     def apply_font(self):
         size = int(self.config.get("font", 30))
-        self.current_label.override_font(font_description(size, True))
-        self.secondary_label.override_font(font_description(max(12, int(size * 0.62)), False))
+        css = build_css(size) + font_family_css()
+        self.provider.load_from_data(css.encode("utf-8"))
 
     # ---------- 命令 ----------
 

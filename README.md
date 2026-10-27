@@ -41,10 +41,10 @@ makepkg -D build/arch -f --noconfirm              # Arch 包
 janmusic          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/JanMusic-1.5.1-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/JanMusic-1.5.2-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./JanMusic-1.5.1-x86_64.AppImage --appimage-extract-and-run
+./JanMusic-1.5.2-x86_64.AppImage --appimage-extract-and-run
 ```
 
 桌面歌词依赖系统的 GTK3 与 layer-shell（Arch：`sudo pacman -S gtk3 python-gobject gtk-layer-shell`）。
@@ -53,15 +53,15 @@ janmusic          # 或从应用菜单启动
 
 | 发行版 | 文件 | 安装 |
 | --- | --- | --- |
-| Arch Linux | `janmusic-1.5.1-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.5.1-1-x86_64.pkg.tar.zst` |
-| Debian / Ubuntu | `JanMusic-1.5.1-amd64.deb` | `sudo apt install ./JanMusic-1.5.1-amd64.deb` |
-| 通用便携 | `JanMusic-1.5.1-x86_64.AppImage` | `chmod +x` 后直接运行 |
+| Arch Linux | `janmusic-1.5.2-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.5.2-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `JanMusic-1.5.2-amd64.deb` | `sudo apt install ./JanMusic-1.5.2-amd64.deb` |
+| 通用便携 | `JanMusic-1.5.2-x86_64.AppImage` | `chmod +x` 后直接运行 |
 
 下载地址：[Releases](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/latest)
 
 ## Android
 
-APK 下载：[JanMusic-1.5.1-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.5.1/JanMusic-1.5.1-android.apk)
+APK 下载：[JanMusic-1.5.2-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.5.2/JanMusic-1.5.2-android.apk)
 
 - 三种登录方式：扫码、手机号验证码、内嵌官方网页登录（可完成滑块验证）
 - 歌单、每日推荐、搜索、歌词、播放队列
