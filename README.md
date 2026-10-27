@@ -44,7 +44,7 @@ janmusic          # 或从应用菜单启动
 
 APK 下载：[JanMusic-1.1.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.1-android/JanMusic-1.1.0-android.apk)
 
-- 扫码登录、歌单、每日推荐、搜索、歌词、播放队列
+- 手机号验证码登录、歌单、每日推荐、搜索、歌词、播放队列
 - 播放 / 暂停、上一首 / 下一首、进度拖动、音质切换
 - 歌曲下载到 `Documents/JanMusic`，已下载歌曲优先从本地播放
 - 支持 Android 7.0（API 24）及以上；需要允许安装未知来源应用

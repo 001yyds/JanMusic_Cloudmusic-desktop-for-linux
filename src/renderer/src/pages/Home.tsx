@@ -3,6 +3,7 @@ import { Heart, Play, Sparkles, TrendingUp } from 'lucide-react'
 import { coverUrl, songArtists, songCover } from '../lib/api'
 import { rgba, useDominantColor } from '../lib/color'
 import { greeting, todayLabel } from '../lib/format'
+import { isMobile } from '../lib/platform'
 import { useAuthStore } from '../store/auth'
 import { useContentStore } from '../store/content'
 import { usePlayerStore } from '../store/player'
@@ -124,14 +125,14 @@ export function Home(): React.JSX.Element {
                     <div className="text-[9.5px] uppercase tracking-[0.34em] text-black/35">NetEase Cloud Music</div>
                     <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-black/90 sm:text-[26px]">登录网易云音乐</h2>
                     <p className="mt-1.5 text-[11.5px] text-black/50">
-                      扫码登录后同步你的歌单、每日推荐与喜欢
+                      {isMobile() ? '使用手机号验证码登录' : '扫码登录后同步你的歌单、每日推荐与喜欢'}
                     </p>
                   </div>
                   <button
                     onClick={() => setLoginOpen(true)}
                     className="w-fit rounded-full bg-brand px-5 py-[8px] text-[12px] font-medium text-white shadow-[0_6px_18px_rgba(255,25,73,0.28)] transition-all duration-200 hover:scale-[1.03] active:scale-95"
                   >
-                    立即扫码登录
+                    {isMobile() ? '手机号登录' : '立即扫码登录'}
                   </button>
                 </div>
                 <div className="pointer-events-none absolute -right-10 -top-16 h-[260px] w-[260px] rounded-full bg-brand/10 blur-[70px]" />

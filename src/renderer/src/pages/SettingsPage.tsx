@@ -198,7 +198,11 @@ export function SettingsPage(): React.JSX.Element {
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] text-black/85">{profile?.nickname ?? '未登录'}</div>
               <div className="mt-0.5 truncate text-[10.5px] text-black/40">
-                {loggedIn ? '网易云音乐账号 · 歌单与喜欢已同步' : '扫码登录后可同步歌单、每日推荐与喜欢'}
+                {loggedIn
+                  ? '网易云音乐账号 · 歌单与喜欢已同步'
+                  : isMobile()
+                    ? '手机号登录后可同步歌单、每日推荐与喜欢'
+                    : '扫码登录后可同步歌单、每日推荐与喜欢'}
               </div>
             </div>
             {loggedIn ? (
@@ -209,7 +213,7 @@ export function SettingsPage(): React.JSX.Element {
             ) : (
               <ActionButton onClick={() => setLoginOpen(true)}>
                 <LogIn size={12} />
-                扫码登录
+                {isMobile() ? '手机号登录' : '扫码登录'}
               </ActionButton>
             )}
           </div>

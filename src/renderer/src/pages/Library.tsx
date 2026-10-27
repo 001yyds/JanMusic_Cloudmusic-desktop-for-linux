@@ -34,7 +34,7 @@ export function Library(): React.JSX.Element {
             className="mt-6 flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-[12.5px] font-medium text-white shadow-[0_8px_24px_rgba(255,25,73,0.28)] transition-all duration-200 hover:scale-[1.03] active:scale-95"
           >
             <LogIn size={14} />
-            扫码登录
+            {isMobile() ? '手机号登录' : '扫码登录'}
           </button>
         </div>
       </div>

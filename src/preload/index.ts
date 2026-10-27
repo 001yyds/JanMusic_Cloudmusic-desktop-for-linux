@@ -16,6 +16,10 @@ const api = {
   auth: {
     qrCreate: () => invoke<{ key: string }>('auth:qr:create'),
     qrCheck: (key: string) => invoke<{ code: number; message?: string }>('auth:qr:check', key),
+    captchaSend: (phone: string, countryCode = '86') =>
+      invoke<{ code: number; message?: string }>('auth:captcha:send', phone, countryCode),
+    phoneLogin: (phone: string, captcha: string, countryCode = '86') =>
+      invoke<{ code: number; message?: string }>('auth:phone:login', phone, captcha, countryCode),
     status: () => invoke('auth:status'),
     logout: () => invoke('auth:logout')
   },

@@ -83,6 +83,14 @@ async function downloadSong(sender: Electron.WebContents, song: Song, level: Qua
 export function registerIpc(): void {
   ipcMain.handle('auth:qr:create', () => netease.qrCreate())
   ipcMain.handle('auth:qr:check', (_event, key: string) => netease.qrCheck(key))
+  ipcMain.handle('auth:captcha:send', (_event, phone: string, countryCode?: string) =>
+    netease.captchaSend(phone, countryCode)
+  )
+  ipcMain.handle(
+    'auth:phone:login',
+    (_event, phone: string, captcha: string, countryCode?: string) =>
+      netease.phoneLogin(phone, captcha, countryCode)
+  )
   ipcMain.handle('auth:status', async () => {
     const { profile } = await netease.account()
     if (!profile) return { loggedIn: false, profile: null, playlists: [] }

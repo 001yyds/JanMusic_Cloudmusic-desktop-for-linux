@@ -234,6 +234,38 @@ class MobileNetease {
     return { code: result.code, message: result.message }
   }
 
+  async captchaSend(phone: string, countryCode = '86'): Promise<{ code: number; message?: string }> {
+    const result = await this.request('sms/captcha/sent', {
+      cellphone: phone,
+      ctcode: countryCode,
+      secrete: 'music_middleuser_pclogin',
+      csrf_token: this.csrfToken()
+    })
+    return { code: result.code ?? 0, message: result.message ?? result.msg }
+  }
+
+  async phoneLogin(
+    phone: string,
+    captcha: string,
+    countryCode = '86'
+  ): Promise<{ code: number; message?: string }> {
+    const result = await this.request('w/login/cellphone', {
+      type: '1',
+      https: 'true',
+      phone,
+      countrycode: countryCode,
+      captcha,
+      remember: 'true',
+      secureCaptcha: '',
+      csrf_token: this.csrfToken()
+    })
+    if (result.code === 200) {
+      if (typeof result.cookie === 'string') this.absorbCookieString(result.cookie)
+      this.persist()
+    }
+    return { code: result.code ?? 0, message: result.message ?? result.msg }
+  }
+
   async account(): Promise<{ profile: Profile | null; account: Json | null }> {
     if (!this.isLoggedIn()) return { profile: null, account: null }
     const result = await this.request('w/nuser/account/get', {})
@@ -612,6 +644,9 @@ const api: NcmApi = {
   auth: {
     qrCreate: () => netease.qrCreate(),
     qrCheck: (key) => netease.qrCheck(key),
+    captchaSend: (phone, countryCode = '86') => netease.captchaSend(phone, countryCode),
+    phoneLogin: (phone, captcha, countryCode = '86') =>
+      netease.phoneLogin(phone, captcha, countryCode),
     status: async () => {
       try {
         const { profile } = await netease.account()

@@ -37,6 +37,12 @@ export interface NcmApi {
   auth: {
     qrCreate(): Promise<{ key: string }>
     qrCheck(key: string): Promise<{ code: number; message?: string }>
+    captchaSend(phone: string, countryCode?: string): Promise<{ code: number; message?: string }>
+    phoneLogin(
+      phone: string,
+      captcha: string,
+      countryCode?: string
+    ): Promise<{ code: number; message?: string }>
     status(): Promise<{ loggedIn: boolean; profile: Profile | null; playlists: Playlist[] }>
     logout(): Promise<{ ok: boolean }>
   }
