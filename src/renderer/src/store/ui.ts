@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { Song } from '../../../shared/types'
 
 export type Route =
   | { page: 'home' }
@@ -30,6 +31,9 @@ interface UiState {
   setLyricsOpen: (open: boolean) => void
   loginOpen: boolean
   setLoginOpen: (open: boolean) => void
+  commentsFor: Song | null
+  openComments: (song: Song) => void
+  closeComments: () => void
   toasts: Toast[]
   toast: (message: string, kind?: Toast['kind']) => void
   dismissToast: (id: number) => void
@@ -64,6 +68,9 @@ export const useUiStore = create<UiState>((set, get) => ({
   setLyricsOpen: (lyricsOpen) => set({ lyricsOpen }),
   loginOpen: false,
   setLoginOpen: (loginOpen) => set({ loginOpen }),
+  commentsFor: null,
+  openComments: (commentsFor) => set({ commentsFor }),
+  closeComments: () => set({ commentsFor: null }),
   toasts: [],
   toast: (message, kind = 'info') => {
     const id = (toastSequence += 1)

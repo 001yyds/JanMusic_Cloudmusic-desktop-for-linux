@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Song } from '../../../shared/types'
 import { api } from '../lib/api'
+import { invalidatePlaylist } from '../lib/playlistCache'
 import { useAuthStore } from './auth'
 import { useUiStore } from './ui'
 
@@ -44,17 +45,32 @@ export const useLikesStore = create<LikesState>((set, get) => ({
       useUiStore.getState().setLoginOpen(true)
       return
     }
-    const liked = new Set(get().liked)
+    const { playlists } = useAuthStore.getState()
+    const target =
+      playlists.find((playlist) => playlist.specialType === 5) ??
+      playlists.find((playlist) => playlist.name.includes('喜欢的音乐'))
+    const before = get().liked
+    const liked = new Set(before)
     const next = !liked.has(song.id)
     if (next) liked.add(song.id)
     else liked.delete(song.id)
     set({ liked })
     try {
       await api.song.like(song.id, next)
+      if (target) {
+        invalidatePlaylist(target.id)
+        useAuthStore.setState((state) => ({
+          playlists: state.playlists.map((playlist) =>
+            playlist.id === target.id && playlist.trackCount != null
+              ? { ...playlist, trackCount: Math.max(0, playlist.trackCount + (next ? 1 : -1)) }
+              : playlist
+          )
+        }))
+      }
       useUiStore.getState().toast(next ? '已添加到我喜欢' : '已取消喜欢', 'success')
-    } catch {
-      set({ liked: get().liked })
-      useUiStore.getState().toast('操作失败，请重试', 'error')
+    } catch (error) {
+      set({ liked: before })
+      useUiStore.getState().toast(error instanceof Error ? error.message : '操作失败，请重试', 'error')
     }
   }
 }))

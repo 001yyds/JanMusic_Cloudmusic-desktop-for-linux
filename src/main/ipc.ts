@@ -99,6 +99,26 @@ export function registerIpc(): void {
   ipcMain.handle('song:url', (_event, id: number, level: Quality) => netease.songUrl(id, level))
   ipcMain.handle('song:lyric', (_event, id: number) => netease.lyric(id))
   ipcMain.handle('song:like', (_event, id: number, like: boolean) => netease.like(id, like))
+  ipcMain.handle('comment:list', (_event, songId: number, offset = 0, limit = 20) =>
+    netease.comments(songId, offset, limit)
+  )
+  ipcMain.handle(
+    'comment:sorted',
+    (_event, songId: number, sort: 99 | 2 | 3, pageNo = 1, limit = 20, cursor = '') =>
+      netease.sortedComments(songId, sort, pageNo, limit, cursor)
+  )
+  ipcMain.handle('comment:floor', (_event, songId: number, parentCommentId: number, limit = 50) =>
+    netease.commentFloor(songId, parentCommentId, limit)
+  )
+  ipcMain.handle('comment:like', (_event, songId: number, commentId: number, like: boolean) =>
+    netease.commentLike(songId, commentId, like)
+  )
+  ipcMain.handle('comment:add', (_event, songId: number, content: string, replyTo?: number) =>
+    netease.addComment(songId, content, replyTo)
+  )
+  ipcMain.handle('comment:remove', (_event, songId: number, commentId: number) =>
+    netease.deleteComment(songId, commentId)
+  )
   ipcMain.handle('search:query', (_event, keyword: string, type: 1 | 1000 | 100, offset = 0) =>
     netease.search(keyword, type, offset)
   )

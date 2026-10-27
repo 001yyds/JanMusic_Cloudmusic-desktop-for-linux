@@ -1,5 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { AppInfo, MediaWarmPayload, Quality, Settings, Song } from '../shared/types'
+import type {
+  AppInfo,
+  Comment,
+  MediaWarmPayload,
+  Quality,
+  Settings,
+  Song
+} from '../shared/types'
 
 const invoke = <T>(channel: string, ...args: unknown[]): Promise<T> =>
   ipcRenderer.invoke(channel, ...args) as Promise<T>
@@ -22,6 +29,20 @@ const api = {
     url: (id: number, level: Quality) => invoke('song:url', id, level),
     lyric: (id: number) => invoke('song:lyric', id),
     like: (id: number, like: boolean) => invoke('song:like', id, like)
+  },
+  comment: {
+    list: (songId: number, offset = 0, limit = 20) =>
+      invoke('comment:list', songId, offset, limit),
+    sorted: (songId: number, sort: 99 | 2 | 3, pageNo = 1, limit = 20, cursor = '') =>
+      invoke('comment:sorted', songId, sort, pageNo, limit, cursor),
+    floor: (songId: number, parentCommentId: number, limit = 50) =>
+      invoke('comment:floor', songId, parentCommentId, limit),
+    like: (songId: number, commentId: number, like: boolean) =>
+      invoke('comment:like', songId, commentId, like),
+    add: (songId: number, content: string, replyTo?: number) =>
+      invoke<Comment | null>('comment:add', songId, content, replyTo),
+    remove: (songId: number, commentId: number) =>
+      invoke('comment:remove', songId, commentId)
   },
   search: {
     query: (keyword: string, type: 1 | 1000 | 100, offset = 0) =>

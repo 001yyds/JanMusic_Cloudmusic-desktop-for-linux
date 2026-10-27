@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { Ambient } from './components/Ambient'
+import { CommentsPanel } from './components/CommentsPanel'
 import { LoginModal } from './components/LoginModal'
 import { NowPlaying } from './components/NowPlaying'
 import { PageRouter } from './components/PageRouter'
@@ -52,6 +53,10 @@ function DesktopApp(): React.JSX.Element {
         event.preventDefault()
         usePlayerStore.getState().toggle()
       } else if (event.key === 'Escape') {
+        if (useUiStore.getState().commentsFor) {
+          useUiStore.getState().closeComments()
+          return
+        }
         useUiStore.getState().setNowPlaying(false)
         useUiStore.getState().setLoginOpen(false)
       } else if (event.key === 'ArrowRight' && event.altKey) {
@@ -106,6 +111,7 @@ export default function App(): React.JSX.Element {
       transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.7 }}
     >
       {isMobile() ? <MobileApp /> : <DesktopApp />}
+      <CommentsPanel />
     </MotionConfig>
   )
 }

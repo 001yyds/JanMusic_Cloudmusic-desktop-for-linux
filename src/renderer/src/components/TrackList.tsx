@@ -1,12 +1,14 @@
-import { Download, Heart, ListPlus, Play } from 'lucide-react'
+import { Download, Heart, ListPlus, MessageSquare, Play } from 'lucide-react'
 import type { Song } from '../../../shared/types'
 import { downloadSong } from '../lib/actions'
-import { songArtists, songDuration } from '../lib/api'
+import { songArtists, songCover, songDuration } from '../lib/api'
 import { cn } from '../lib/cn'
 import { formatDuration } from '../lib/format'
 import { useLikesStore } from '../store/likes'
 import { usePlayerStore } from '../store/player'
 import { useSettingsStore } from '../store/settings'
+import { useUiStore } from '../store/ui'
+import { Cover } from './Cover'
 import { Equalizer } from './Equalizer'
 
 interface TrackListProps {
@@ -55,11 +57,11 @@ export function TrackList({ songs, showAlbum = true, showIndex = true, dense }: 
 
   const columns = showAlbum
     ? showIndex
-      ? 'grid-cols-[28px_minmax(0,2.4fr)_52px_88px] min-[1040px]:grid-cols-[28px_minmax(0,2.4fr)_minmax(0,1.5fr)_52px_88px]'
-      : 'grid-cols-[minmax(0,2.4fr)_52px_88px] min-[1040px]:grid-cols-[minmax(0,2.4fr)_minmax(0,1.5fr)_52px_88px]'
+      ? 'grid-cols-[28px_minmax(0,1fr)_118px] sm:grid-cols-[28px_minmax(0,2.4fr)_52px_118px] min-[1040px]:grid-cols-[28px_minmax(0,2.4fr)_minmax(0,1.5fr)_52px_118px]'
+      : 'grid-cols-[minmax(0,1fr)_118px] sm:grid-cols-[minmax(0,2.4fr)_52px_118px] min-[1040px]:grid-cols-[minmax(0,2.4fr)_minmax(0,1.5fr)_52px_118px]'
     : showIndex
-      ? 'grid-cols-[28px_minmax(0,1fr)_52px_88px]'
-      : 'grid-cols-[minmax(0,1fr)_52px_88px]'
+      ? 'grid-cols-[28px_minmax(0,1fr)_118px] sm:grid-cols-[28px_minmax(0,2.4fr)_52px_118px]'
+      : 'grid-cols-[minmax(0,1fr)_118px] sm:grid-cols-[minmax(0,2.4fr)_52px_118px]'
 
   return (
     <div className="flex flex-col">
@@ -98,23 +100,30 @@ export function TrackList({ songs, showAlbum = true, showIndex = true, dense }: 
               </div>
             )}
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={cn(
-                    'truncate text-[13px] transition-colors duration-200',
-                    active ? 'text-brand' : 'text-black/85 group-hover:text-black'
-                  )}
-                >
-                  {song.name}
-                </span>
-                {vip && (
-                  <span className="shrink-0 rounded-[3px] border border-brand/35 px-1 text-[8px] leading-[13px] text-brand">
-                    VIP
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Cover
+                src={songCover(song, 96)}
+                radius={6}
+                className={cn('shrink-0', dense ? 'h-7 w-7' : 'h-8 w-8')}
+              />
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      'truncate text-[13px] transition-colors duration-200',
+                      active ? 'text-brand' : 'text-black/85 group-hover:text-black'
+                    )}
+                  >
+                    {song.name}
                   </span>
-                )}
+                  {vip && (
+                    <span className="shrink-0 rounded-[3px] border border-brand/35 px-1 text-[8px] leading-[13px] text-brand">
+                      VIP
+                    </span>
+                  )}
+                </div>
+                <div className="truncate text-[11px] text-black/45">{songArtists(song)}</div>
               </div>
-              <div className="truncate text-[11px] text-black/45">{songArtists(song)}</div>
             </div>
 
             {showAlbum && (
@@ -123,7 +132,7 @@ export function TrackList({ songs, showAlbum = true, showIndex = true, dense }: 
               </div>
             )}
 
-            <div className="tabular text-right text-[11.5px] text-black/35">{formatDuration(songDuration(song))}</div>
+            <div className="tabular hidden text-right text-[11.5px] text-black/35 sm:block">{formatDuration(songDuration(song))}</div>
 
             <div className="flex items-center justify-end gap-0.5 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100">
               <RowAction title={isLiked ? '取消喜欢' : '喜欢'} active={isLiked} onClick={() => void useLikesStore.getState().toggle(song)}>
@@ -131,6 +140,9 @@ export function TrackList({ songs, showAlbum = true, showIndex = true, dense }: 
               </RowAction>
               <RowAction title="下载" onClick={() => void downloadSong(song, quality)}>
                 <Download size={14} />
+              </RowAction>
+              <RowAction title="评论" onClick={() => useUiStore.getState().openComments(song)}>
+                <MessageSquare size={14} />
               </RowAction>
               <RowAction title="加入播放队列" onClick={() => addToQueue([song])}>
                 <ListPlus size={14} />

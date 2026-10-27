@@ -272,7 +272,7 @@ export function SettingsPage(): React.JSX.Element {
               className="mt-3 rounded-[16px] border border-white/30 bg-white/10 px-4 py-3 text-center text-black/70"
               style={{ fontSize: lyricSize }}
             >
-              夜色温柔，风也温柔
+              诸事顺利！
             </div>
           </div>
         </Section>

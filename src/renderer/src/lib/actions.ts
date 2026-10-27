@@ -1,8 +1,7 @@
 import type { Quality, Song } from '../../../shared/types'
 import { usePlayerStore } from '../store/player'
-import { useSettingsStore } from '../store/settings'
+import { useDownloadsStore } from '../store/downloads'
 import { useUiStore } from '../store/ui'
-import { api } from './api'
 import { loadPlaylist } from './playlistCache'
 
 export async function playPlaylist(id: number, index = 0): Promise<void> {
@@ -19,14 +18,16 @@ export async function playPlaylist(id: number, index = 0): Promise<void> {
   }
 }
 
-export async function downloadSong(song: Song, level: Quality): Promise<void> {
+export function downloadSong(song: Song, level: Quality): void {
   const { toast } = useUiStore.getState()
-  toast(`开始下载《${song.name}》`, 'info')
-  try {
-    const record = await api.downloads.add(song, level)
-    toast(`已保存：${record.name}`, 'success')
-    await useSettingsStore.getState().refreshDownloads()
-  } catch (error) {
-    toast(error instanceof Error ? error.message : '下载失败', 'error')
-  }
+  const count = useDownloadsStore.getState().enqueue([song], level, false)
+  if (count) toast(`已添加《${song.name}》到下载列表`, 'info')
+  else toast('这首歌已在下载列表中', 'info')
+}
+
+export function downloadSongs(songs: Song[], level: Quality): void {
+  const { toast } = useUiStore.getState()
+  const count = useDownloadsStore.getState().enqueue(songs, level)
+  if (count) toast(`已添加 ${count} 首到下载列表`, 'success')
+  else toast('这些歌曲已在下载列表中', 'info')
 }

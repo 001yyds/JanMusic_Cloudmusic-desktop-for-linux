@@ -94,6 +94,51 @@ export interface LyricResult {
   tlyric: string
 }
 
+export interface CommentUser {
+  userId: number
+  nickname: string
+  avatarUrl?: string
+  vipType?: number
+}
+
+export interface CommentBeReplied {
+  user?: CommentUser
+  content?: string
+  beRepliedCommentId?: number
+}
+
+export interface Comment {
+  commentId: number
+  content: string
+  time: number
+  timeStr?: string
+  likedCount: number
+  liked?: boolean
+  user?: CommentUser
+  beReplied?: CommentBeReplied[]
+  showFloorComment?: { replyCount?: number } | null
+  replyCount?: number
+  owner?: boolean
+  ipLocation?: { location?: string } | null
+  parentCommentId?: number
+}
+
+export interface CommentPage {
+  total: number
+  hasMore: boolean
+  hotComments: Comment[]
+  comments: Comment[]
+  cursor?: string
+}
+
+export interface CommentFloorPage {
+  total: number
+  hasMore: boolean
+  comments: Comment[]
+}
+
+export type CommentSort = 99 | 2 | 3
+
 export interface MediaWarmPayload {
   id: number
   upstream: string

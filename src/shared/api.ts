@@ -1,5 +1,9 @@
 import type {
   AppInfo,
+  Comment,
+  CommentFloorPage,
+  CommentPage,
+  CommentSort,
   DownloadRecord,
   LyricResult,
   MediaWarmPayload,
@@ -46,6 +50,20 @@ export interface NcmApi {
     url(id: number, level: Quality): Promise<SongUrlResult>
     lyric(id: number): Promise<LyricResult>
     like(id: number, like: boolean): Promise<void>
+  }
+  comment: {
+    list(songId: number, offset?: number, limit?: number): Promise<CommentPage>
+    sorted(
+      songId: number,
+      sort: CommentSort,
+      pageNo?: number,
+      limit?: number,
+      cursor?: string
+    ): Promise<CommentPage>
+    floor(songId: number, parentCommentId: number, limit?: number): Promise<CommentFloorPage>
+    like(songId: number, commentId: number, like: boolean): Promise<void>
+    add(songId: number, content: string, replyTo?: number): Promise<Comment | null>
+    remove(songId: number, commentId: number): Promise<void>
   }
   search: {
     query(keyword: string, type: 1 | 1000 | 100, offset?: number): Promise<SearchResult>

@@ -15,6 +15,10 @@ export function cachedPlaylist(id: number): Playlist | undefined {
   return cache.get(id)
 }
 
+export function invalidatePlaylist(id: number): void {
+  cache.delete(id)
+}
+
 export function clearPlaylistCache(): void {
   cache.clear()
 }

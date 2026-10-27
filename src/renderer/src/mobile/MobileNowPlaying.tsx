@@ -7,6 +7,7 @@ import {
   ListMusic,
   ListOrdered,
   Loader2,
+  MessageSquare,
   Pause,
   Play,
   Repeat,
@@ -43,6 +44,7 @@ export function MobileNowPlaying(): React.JSX.Element {
   const lyricsOpen = useUiStore((state) => state.lyricsOpen)
   const setLyricsOpen = useUiStore((state) => state.setLyricsOpen)
   const setQueueOpen = useUiStore((state) => state.setQueueOpen)
+  const openComments = useUiStore((state) => state.openComments)
 
   const current = usePlayerStore((state) => state.current)
   const playing = usePlayerStore((state) => state.playing)
@@ -171,6 +173,13 @@ export function MobileNowPlaying(): React.JSX.Element {
                 <div className="truncate text-[11px] text-black/50">{album?.name ?? 'JanMusic'}</div>
               </div>
               <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => openComments(current)}
+                  className="glass-soft flex h-9 w-9 items-center justify-center rounded-full text-black/50 transition-transform duration-200 active:scale-90"
+                  aria-label="评论"
+                >
+                  <MessageSquare size={16} />
+                </button>
                 <button
                   onClick={() => setLyricsOpen(!lyricsOpen)}
                   className={cn(

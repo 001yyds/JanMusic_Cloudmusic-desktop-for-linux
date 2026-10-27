@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { FolderOpen, HardDrive, Music4, Trash2 } from 'lucide-react'
-import { coverUrl } from '../lib/api'
+import { AlertCircle, CheckCircle2, Download, FolderOpen, HardDrive, Loader2, Music4, Trash2, X } from 'lucide-react'
+import { coverUrl, songArtists } from '../lib/api'
+import { cn } from '../lib/cn'
 import { formatBytes } from '../lib/format'
 import { isMobile } from '../lib/platform'
+import { useDownloadsStore } from '../store/downloads'
 import { useSettingsStore } from '../store/settings'
 import { useUiStore } from '../store/ui'
 import { Cover } from '../components/Cover'
@@ -19,6 +21,9 @@ export function DownloadsPage(): React.JSX.Element {
   const settings = useSettingsStore((state) => state.settings)
   const refresh = useSettingsStore((state) => state.refreshDownloads)
   const toast = useUiStore((state) => state.toast)
+  const tasks = useDownloadsStore((state) => state.tasks)
+  const clearFinished = useDownloadsStore((state) => state.clearFinished)
+  const removeTask = useDownloadsStore((state) => state.removeTask)
   const [cache, setCache] = useState({ audio: 0, images: 0 })
   const [clearing, setClearing] = useState(false)
 
@@ -30,6 +35,8 @@ export function DownloadsPage(): React.JSX.Element {
   const downloads = settings?.downloads ?? []
   const totalSize = downloads.reduce((sum, item) => sum + item.size, 0)
   const cacheSize = cache.audio + cache.images
+  const activeCount = tasks.filter((task) => task.status === 'queued' || task.status === 'downloading').length
+  const hasFinished = tasks.some((task) => task.status === 'done' || task.status === 'error')
 
   const clearCache = async (): Promise<void> => {
     setClearing(true)
@@ -69,6 +76,89 @@ export function DownloadsPage(): React.JSX.Element {
         </button>
       </header>
 
+      <div className="glass-panel relative mt-4 rounded-[24px] border border-white/40 p-2 sm:mt-5">
+        <div className="flex items-center gap-2 px-3 pb-1.5 pt-1.5">
+          <Download size={14} className="text-brand" />
+          <span className="text-[12.5px] font-medium text-black/80">下载列表</span>
+          <span className="rounded-full bg-white/35 px-1.5 py-0.5 text-[10px] text-black/45">{tasks.length}</span>
+          {activeCount > 0 && (
+            <span className="text-[10.5px] text-black/35">正在下载 {activeCount} 首</span>
+          )}
+          {hasFinished && (
+            <button
+              onClick={clearFinished}
+              className="ml-auto rounded-full px-2 py-1 text-[10px] text-black/35 transition-colors duration-200 hover:bg-white/30 hover:text-black/70"
+            >
+              清除已完成
+            </button>
+          )}
+        </div>
+
+        {tasks.length ? (
+          <div className="flex flex-col">
+            {tasks.map((task) => {
+              const percent = task.total ? Math.min(100, Math.round((task.received / task.total) * 100)) : 0
+              const active = task.status === 'queued' || task.status === 'downloading'
+              return (
+                <div
+                  key={task.key}
+                  className="group grid grid-cols-[40px_minmax(0,1fr)_28px] items-center gap-3 rounded-[14px] px-2.5 py-2 transition-colors duration-200 hover:bg-white/25"
+                >
+                  <Cover src={coverUrl(task.song.al?.picUrl ?? task.song.album?.picUrl, 100)} radius={8} className="h-9 w-9" />
+                  <div className="min-w-0">
+                    <div className="truncate text-[12.5px] text-black/85">{task.song.name}</div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[10.5px]">
+                      <span className="truncate text-black/45">{songArtists(task.song)}</span>
+                      <span className="text-black/15">·</span>
+                      <span
+                        className={cn(
+                          'flex shrink-0 items-center gap-1',
+                          task.status === 'error'
+                            ? 'text-brand'
+                            : task.status === 'done'
+                              ? 'text-emerald-600/80'
+                              : 'text-black/45'
+                        )}
+                      >
+                        {task.status === 'downloading' && <Loader2 size={10} className="animate-spin" />}
+                        {task.status === 'done' && <CheckCircle2 size={10} />}
+                        {task.status === 'error' && <AlertCircle size={10} />}
+                        {task.status === 'queued' && '等待下载'}
+                        {task.status === 'downloading' && (task.total ? `${percent}%` : '下载中…')}
+                        {task.status === 'done' && `已完成 · ${formatBytes(task.received)}`}
+                        {task.status === 'error' && (task.error ?? '下载失败')}
+                      </span>
+                    </div>
+                    {active && (
+                      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-black/[0.06]">
+                        <div
+                          className={cn('h-full rounded-full bg-brand transition-[width] duration-300', !task.total && 'w-1/3 animate-pulse')}
+                          style={task.total ? { width: `${percent}%` } : undefined}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {!active && (
+                    <button
+                      onClick={() => removeTask(task.key)}
+                      className="flex h-7 w-7 items-center justify-center rounded-[8px] text-black/25 transition-all duration-200 hover:bg-white/35 hover:text-black active:scale-90"
+                      title="从列表移除"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-7 text-center">
+            <Download size={20} strokeWidth={1.3} className="text-black/12" />
+            <p className="mt-2 text-[11px] text-black/25">暂无下载任务</p>
+          </div>
+        )}
+      </div>
+
       <div className="glass-soft relative mt-4 flex flex-wrap items-center gap-2.5 rounded-[18px] border border-white/40 px-4 py-3 sm:mt-5 sm:flex-nowrap sm:gap-3">
         <HardDrive size={15} className="shrink-0 text-black/30" />
         <div className="min-w-0 flex-1 text-[11px] text-black/45 sm:text-[11.5px]">
@@ -98,7 +188,12 @@ export function DownloadsPage(): React.JSX.Element {
         )}
       </div>
 
-      <div className="glass-panel relative mt-5 rounded-[24px] border border-white/40 p-2 sm:mt-7">
+      <div className="mt-5 flex items-baseline justify-between px-1 sm:mt-6">
+        <h2 className="text-[13px] font-medium text-black/80">已下载</h2>
+        <span className="text-[9.5px] uppercase tracking-[0.24em] text-black/35">Library</span>
+      </div>
+
+      <div className="glass-panel relative mt-2 rounded-[24px] border border-white/40 p-2">
         {downloads.length ? (
           <div className="flex flex-col">
             {downloads.map((item) => (

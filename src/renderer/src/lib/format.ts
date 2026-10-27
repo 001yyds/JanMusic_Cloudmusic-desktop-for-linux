@@ -40,3 +40,13 @@ export function todayLabel(): string {
   const week = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][now.getDay()]
   return `${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${week}`
 }
+
+export function relativeTime(timestamp: number, fallback?: string): string {
+  if (!timestamp) return fallback ?? ''
+  const diff = Date.now() - timestamp
+  if (diff < 60_000) return '刚刚'
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`
+  if (diff < 2_592_000_000) return `${Math.floor(diff / 86_400_000)} 天前`
+  return fallback ?? new Date(timestamp).toLocaleDateString('zh-CN')
+}

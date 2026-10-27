@@ -1,5 +1,16 @@
 import { clearCookies, loadCookies, saveCookies } from '../store'
-import type { LyricResult, Playlist, Profile, Quality, Song, SongUrlResult } from '../../shared/types'
+import type {
+  Comment,
+  CommentFloorPage,
+  CommentPage,
+  CommentSort,
+  LyricResult,
+  Playlist,
+  Profile,
+  Quality,
+  Song,
+  SongUrlResult
+} from '../../shared/types'
 import { encodeWeapi } from './crypto'
 
 const UA =
@@ -59,6 +70,16 @@ class NeteaseClient {
     if (!this.dirty) return
     this.dirty = false
     saveCookies(Object.fromEntries(this.cookies))
+  }
+
+  private assertOk(result: Json, fallback: string): void {
+    if (typeof result.code === 'number' && result.code !== 200) {
+      throw new Error(result.message ?? result.msg ?? fallback)
+    }
+  }
+
+  private csrfToken(): string {
+    return this.cookies.get('__csrf') ?? ''
   }
 
   private async request<T = Json>(path: string, payload: Json = {}): Promise<T> {
@@ -180,12 +201,106 @@ class NeteaseClient {
 
   async like(id: number, like: boolean): Promise<void> {
     this.ensure()
-    await this.request('radio/like', {
+    const result = await this.request('radio/like', {
+      alg: 'itembased',
       trackId: id,
       like,
-      time: 25,
-      csrf_token: this.cookies.get('__csrf') ?? ''
+      time: '3',
+      csrf_token: this.csrfToken()
     })
+    this.assertOk(result, like ? '喜欢失败，请稍后重试' : '取消喜欢失败，请稍后重试')
+  }
+
+  async comments(songId: number, offset = 0, limit = 20): Promise<CommentPage> {
+    const result = await this.request(`v1/resource/comments/R_SO_4_${songId}`, {
+      rid: songId,
+      limit,
+      offset,
+      beforeTime: 0
+    })
+    this.assertOk(result, '评论加载失败')
+    return {
+      total: (result.total as number) ?? 0,
+      hasMore: !!result.more,
+      hotComments: (result.hotComments as Comment[]) ?? [],
+      comments: (result.comments as Comment[]) ?? []
+    }
+  }
+
+  async sortedComments(
+    songId: number,
+    sort: CommentSort,
+    pageNo = 1,
+    limit = 20,
+    cursor = ''
+  ): Promise<CommentPage> {
+    const position = Math.max(0, pageNo - 1) * limit
+    const cursorValue = sort === 99 ? String(position) : sort === 2 ? `normalHot#${position}` : cursor || '0'
+    const result = await this.request('v2/resource/comments', {
+      threadId: `R_SO_4_${songId}`,
+      pageNo,
+      showInner: true,
+      pageSize: limit,
+      cursor: cursorValue,
+      sortType: sort
+    })
+    this.assertOk(result, '评论加载失败')
+    const data = (result.data as Json) ?? {}
+    return {
+      total: (data.totalCount as number) ?? 0,
+      hasMore: !!data.hasMore,
+      hotComments: [],
+      comments: (data.comments as Comment[]) ?? [],
+      cursor: (data.cursor as string) ?? cursorValue
+    }
+  }
+
+  async commentFloor(songId: number, parentCommentId: number, limit = 50): Promise<CommentFloorPage> {
+    const result = await this.request('resource/comment/floor/get', {
+      parentCommentId,
+      threadId: `R_SO_4_${songId}`,
+      time: -1,
+      limit
+    })
+    this.assertOk(result, '回复加载失败')
+    const data = (result.data as Json) ?? {}
+    return {
+      total: (data.totalCount as number) ?? 0,
+      hasMore: !!data.hasMore,
+      comments: (data.comments as Comment[]) ?? []
+    }
+  }
+
+  async commentLike(songId: number, commentId: number, like: boolean): Promise<void> {
+    this.ensure()
+    const result = await this.request(`v1/comment/${like ? 'like' : 'unlike'}`, {
+      threadId: `R_SO_4_${songId}`,
+      commentId,
+      csrf_token: this.csrfToken()
+    })
+    this.assertOk(result, like ? '点赞失败' : '取消点赞失败')
+  }
+
+  async addComment(songId: number, content: string, replyTo?: number): Promise<Comment | null> {
+    this.ensure()
+    const result = await this.request(`resource/comments/${replyTo ? 'reply' : 'add'}`, {
+      threadId: `R_SO_4_${songId}`,
+      content,
+      ...(replyTo ? { commentId: replyTo } : {}),
+      csrf_token: this.csrfToken()
+    })
+    this.assertOk(result, '评论失败，请稍后重试')
+    return (result.comment as Comment) ?? null
+  }
+
+  async deleteComment(songId: number, commentId: number): Promise<void> {
+    this.ensure()
+    const result = await this.request('resource/comments/delete', {
+      threadId: `R_SO_4_${songId}`,
+      commentId,
+      csrf_token: this.csrfToken()
+    })
+    this.assertOk(result, '删除评论失败')
   }
 
   async lyric(id: number): Promise<LyricResult> {
@@ -226,7 +341,20 @@ class NeteaseClient {
 
   async toplists(): Promise<Playlist[]> {
     const result = await this.request('toplist/detail', {})
-    return (result.list as Playlist[]) ?? []
+    const list = (result.list as Json[]) ?? []
+    return list.map((item) => {
+      const tracks = ((item.tracks as Json[]) ?? []).map((track, index) => {
+        const artist = (track.second as string) ?? ''
+        return {
+          id: Number(track.id ?? item.topTrackIds?.[index] ?? index + 1),
+          name: (track.name as string) ?? (track.first as string) ?? '',
+          ar: (track.ar as Song['ar']) ?? (artist ? [{ id: 0, name: artist }] : []),
+          al: (track.al as Song['al']) ?? undefined,
+          dt: track.dt as number | undefined
+        } as Song
+      })
+      return { ...(item as unknown as Playlist), tracks }
+    })
   }
 }
 

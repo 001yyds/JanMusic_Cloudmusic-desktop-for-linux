@@ -33,6 +33,10 @@ export function MobileApp(): React.JSX.Element {
             ui.setLoginOpen(false)
             return
           }
+          if (ui.commentsFor) {
+            ui.closeComments()
+            return
+          }
           if (ui.queueOpen) {
             ui.setQueueOpen(false)
             return
