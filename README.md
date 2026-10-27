@@ -42,7 +42,7 @@ janmusic          # 或从应用菜单启动
 
 ## Android
 
-APK 下载：[JanMusic-1.1.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.1-android/JanMusic-1.1.0-android.apk)
+APK 下载：[JanMusic-1.2.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.2-android/JanMusic-1.2.0-android.apk)
 
 - 手机号验证码登录、歌单、每日推荐、搜索、歌词、播放队列
 - 播放 / 暂停、上一首 / 下一首、进度拖动、音质切换
