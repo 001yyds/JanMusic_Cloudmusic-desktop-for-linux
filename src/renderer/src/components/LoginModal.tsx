@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import QRCode from 'qrcode'
 import { api } from '../lib/api'
+import { useLiquidGlass } from '../lib/liquidGlass'
 import { isMobile } from '../lib/platform'
 import { useAuthStore } from '../store/auth'
 import { useContentStore } from '../store/content'
@@ -48,6 +49,10 @@ function DesktopLoginModal(): React.JSX.Element {
 
   const [phase, setPhase] = useState<Phase>('loading')
   const [qr, setQr] = useState('')
+  const glass = useLiquidGlass({ radius: 28 })
+  const glassStyle = glass.refract
+    ? ({ '--lg-filter': `url(#${glass.filterId})` } as React.CSSProperties)
+    : undefined
   const keyRef = useRef('')
   const busyRef = useRef(false)
   const settledRef = useRef(false)
@@ -129,11 +134,15 @@ function DesktopLoginModal(): React.JSX.Element {
             onClick={() => setOpen(false)}
           />
           <motion.div
+            ref={glass.ref}
+            style={glassStyle}
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-            className="glass-strong relative w-[min(368px,calc(100vw-32px))] overflow-hidden rounded-[28px] border border-white/50 p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)] sm:rounded-[30px] sm:p-7"
+            className={`glass-strong liquid-glass ${
+              glass.refract ? 'lg-refract' : ''
+            } relative w-[min(368px,calc(100vw-32px))] overflow-hidden rounded-[28px] border border-white/50 p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)] sm:rounded-[30px] sm:p-7`}
           >
             <div className="liquid-sheen" />
             <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-brand/10 blur-[80px]" />
@@ -211,6 +220,11 @@ function MobileLogin(): React.JSX.Element {
   const open = useUiStore((state) => state.loginOpen)
   const setOpen = useUiStore((state) => state.setLoginOpen)
   const toast = useUiStore((state) => state.toast)
+
+  const glass = useLiquidGlass({ radius: 28 })
+  const glassStyle = glass.refract
+    ? ({ '--lg-filter': `url(#${glass.filterId})` } as React.CSSProperties)
+    : undefined
 
   const [mode, setMode] = useState<'qr' | 'phone'>('qr')
 
@@ -415,11 +429,15 @@ function MobileLogin(): React.JSX.Element {
             onClick={() => setOpen(false)}
           />
           <motion.div
+            ref={glass.ref}
+            style={glassStyle}
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-            className="glass-strong relative max-h-[calc(100dvh-32px)] w-[min(380px,calc(100vw-24px))] overflow-y-auto rounded-[28px] border border-white/50 p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)]"
+            className={`glass-strong liquid-glass ${
+              glass.refract ? 'lg-refract' : ''
+            } relative max-h-[calc(100dvh-32px)] w-[min(380px,calc(100vw-24px))] overflow-y-auto rounded-[28px] border border-white/50 p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)]`}
           >
             <div className="liquid-sheen-static" />
             <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-brand/10 blur-[80px]" />

@@ -204,6 +204,65 @@
     );
     backdrop-filter: blur(22px) saturate(190%) brightness(1.05);
   }
+
+  /* ---- Liquid Glass ---- */
+
+  .liquid-glass {
+    --lg-x: 22%;
+    --lg-y: -24%;
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.46),
+      rgba(255, 255, 255, 0.2) 55%,
+      rgba(255, 255, 255, 0.32)
+    );
+  }
+
+  /* 折射：位移贴图由 useLiquidGlass 按元素尺寸动态生成，经 --lg-filter 注入 */
+  .liquid-glass.lg-refract {
+    /* 不要加 -webkit- 前缀：Chromium 的 -webkit-backdrop-filter 不认 url()，
+       而且构建时 Lightning CSS 会保留前缀、丢掉标准属性，导致整条规则失效 */
+    backdrop-filter: var(--lg-filter) blur(2px) saturate(200%) brightness(1.06);
+  }
+
+  /* 镜面高光跟随指针 / 手指 */
+  .liquid-glass::before {
+    background:
+      radial-gradient(
+        120% 100% at var(--lg-x) var(--lg-y),
+        rgba(255, 255, 255, 0.82),
+        rgba(255, 255, 255, 0.18) 34%,
+        transparent 62%
+      ),
+      linear-gradient(112deg, transparent 40%, rgba(255, 255, 255, 0.26) 49%, transparent 58%);
+    opacity: 1;
+  }
+
+  /* 玻璃厚度：外缘亮边 + 内侧轻微冷色阴影 */
+  .liquid-glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      inset 0 -1px 1px rgba(120, 140, 200, 0.22);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .liquid-glass::before {
+      opacity: 0.25;
+    }
+  }
 }
 
 @utility text-balance {

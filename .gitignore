@@ -5,6 +5,7 @@ build/arch/pkg
 build/arch/src
 build/arch/*.pkg.tar.*
 .commandcode
+.playwright-mcp
 *.log
 *.tsbuildinfo
 android/app/build
