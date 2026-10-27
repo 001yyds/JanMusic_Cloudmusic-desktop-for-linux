@@ -1,6 +1,6 @@
 # Maintainer: jvvoch <jvvoch@localhost>
 pkgname=janmusic
-pkgver=1.5.0
+pkgver=1.5.1
 pkgrel=1
 pkgdesc="网易云音乐桌面客户端"
 arch=('x86_64')

@@ -117,6 +117,7 @@ export function SettingsPage(): React.JSX.Element {
   const desktopLyricsLocked = settings?.desktopLyricsLocked ?? false
 
   const [lyricSize, setLyricSize] = useState(22)
+  const [desktopLyricsFont, setDesktopLyricsFont] = useState(30)
   const [cache, setCache] = useState({ audio: 0, images: 0 })
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [clearing, setClearing] = useState(false)
@@ -133,6 +134,10 @@ export function SettingsPage(): React.JSX.Element {
   useEffect(() => {
     setLyricSize(settings?.lyricFontSize ?? 22)
   }, [settings?.lyricFontSize])
+
+  useEffect(() => {
+    setDesktopLyricsFont(settings?.desktopLyricsFontSize ?? 30)
+  }, [settings?.desktopLyricsFontSize])
 
   const downloads = settings?.downloads ?? []
   const downloadSize = downloads.reduce((sum, item) => sum + item.size, 0)
@@ -316,6 +321,26 @@ export function SettingsPage(): React.JSX.Element {
                   {desktopLyricsLocked ? '解锁' : '锁定'}
                 </ActionButton>
               )}
+            </Row>
+          )}
+
+          {!isMobile() && desktopLyrics && (
+            <Row icon={Type} title="桌面歌词字号" hint={`${desktopLyricsFont}px`}>
+              <Slider
+                value={desktopLyricsFont - 16}
+                max={44}
+                onChange={(value) => {
+                  const size = 16 + Math.round(value)
+                  setDesktopLyricsFont(size)
+                  void window.ncm.lyrics?.setFont(size)
+                }}
+                onCommit={(value) =>
+                  void useSettingsStore
+                    .getState()
+                    .patch({ desktopLyricsFontSize: 16 + Math.round(value) })
+                }
+                className="w-[120px] sm:w-[170px]"
+              />
             </Row>
           )}
         </Section>

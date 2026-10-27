@@ -54,6 +54,12 @@ function createWindow(): void {
     void shell.openExternal(url)
     return { action: 'deny' }
   })
+  // 应用只应停留在自己的页面上，任何外部导航一律拦下
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const devUrl = process.env.ELECTRON_RENDERER_URL
+    const allowed = devUrl ? url.startsWith(devUrl) : url.startsWith('file://')
+    if (!allowed) event.preventDefault()
+  })
 
   if (process.env.ELECTRON_RENDERER_URL) {
     void mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)

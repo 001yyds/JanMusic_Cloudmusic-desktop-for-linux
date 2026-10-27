@@ -8,8 +8,7 @@ import {
   setDesktopLyricsFont,
   setDesktopLyricsLocked,
   setDesktopLyricsVisible,
-  updateDesktopLyrics,
-  type DesktopLyricState
+  updateDesktopLyrics
 } from './desktopLyrics'
 import { netease } from './netease/client'
 import { cacheInfo, clearCache, warmAudio } from './media'
@@ -192,19 +191,50 @@ export function registerIpc(): void {
     return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
   })
 
-  ipcMain.on('lyrics:update', (_event, state: DesktopLyricState) => {
-    updateDesktopLyrics(state)
+  // 桌面歌词通道：只接受主框架发来的、类型受控的参数，避免子框架或异常载荷
+  const fromMainFrame = (
+    event: Electron.IpcMainEvent | Electron.IpcMainInvokeEvent
+  ): boolean => {
+    try {
+      return event.senderFrame === event.sender.mainFrame
+    } catch {
+      return false
+    }
+  }
+  const boundedText = (value: unknown): string =>
+    typeof value === 'string' ? value.slice(0, 500) : ''
+
+  ipcMain.on('lyrics:update', (event, state: unknown) => {
+    if (!fromMainFrame(event)) return
+    if (!state || typeof state !== 'object') return
+    const payload = state as Record<string, unknown>
+    try {
+      updateDesktopLyrics({
+        current: boundedText(payload.current),
+        secondary: boundedText(payload.secondary),
+        playing: payload.playing !== false
+      })
+    } catch {
+      // 覆盖层不可用时静默失败，不打断渲染层
+    }
   })
-  ipcMain.handle('lyrics:visible', (_event, visible: boolean) => {
-    setDesktopLyricsVisible(visible)
+  ipcMain.handle('lyrics:visible', (event, visible: unknown) => {
+    if (!fromMainFrame(event)) return false
+    setDesktopLyricsVisible(visible === true)
     return true
   })
-  ipcMain.handle('lyrics:lock', (_event, locked: boolean) => {
-    setDesktopLyricsLocked(locked)
+  ipcMain.handle('lyrics:lock', (event, locked: unknown) => {
+    if (!fromMainFrame(event)) return false
+    setDesktopLyricsLocked(locked === true)
     return true
   })
-  ipcMain.handle('lyrics:font', (_event, size: number) => {
-    setDesktopLyricsFont(size)
+  ipcMain.handle('lyrics:font', (event, size: unknown) => {
+    if (!fromMainFrame(event)) return false
+    const value =
+      typeof size === 'number' && Number.isFinite(size)
+        ? Math.min(96, Math.max(10, Math.round(size)))
+        : 30
+    setDesktopLyricsFont(value)
     return true
   })
 }
