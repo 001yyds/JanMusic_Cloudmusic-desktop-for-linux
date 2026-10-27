@@ -34,6 +34,7 @@ const COOKIE_KEY = 'janmusic-cookies-v1'
 
 interface WebLoginPlugin {
   open(): Promise<{ cookie: string }>
+  clear(): Promise<void>
 }
 
 // 原生插件：用系统 WebView 打开网易云官方登录页，登录完成后回传 Cookie
@@ -484,6 +485,10 @@ class MobileNetease {
     } catch {
       // storage unavailable
     }
+    // 同步清掉 WebView 的 Cookie 存储，否则下次打开网页登录会读到旧会话
+    void WebLogin.clear().catch(() => {
+      // 非原生环境或插件不可用时忽略
+    })
   }
 
   async userPlaylists(uid: number): Promise<Playlist[]> {

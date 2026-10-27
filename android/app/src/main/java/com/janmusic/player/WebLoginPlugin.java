@@ -36,6 +36,8 @@ public class WebLoginPlugin extends Plugin {
     private Dialog dialog;
     private WebView webView;
     private PluginCall pending;
+    /** 打开登录页瞬间的 Cookie 快照，用来判断 MUSIC_U 是不是本次新产生的 */
+    private String preLoginCookie = "";
 
     /** 只允许停留在网易云自己的 https 域名，防止登录页把导航带到钓鱼站点 */
     private static boolean isAllowedUrl(String url) {
@@ -47,21 +49,22 @@ public class WebLoginPlugin extends Plugin {
         return host.equals("music.163.com") || host.endsWith(".music.163.com");
     }
 
-    /**
-     * 打开登录页前清掉上一次留下的 music.163.com Cookie，
-     * 否则轮询会立刻读到旧的 MUSIC_U，用户以为登录成功、实际还是旧会话。
-     */
-    private static void clearMusicCookies(CookieManager cookieManager) {
-        String existing = cookieManager.getCookie(COOKIE_URL);
-        if (existing != null) {
-            for (String pair : existing.split(";")) {
-                int eq = pair.indexOf('=');
-                String name = (eq > 0 ? pair.substring(0, eq) : pair).trim();
-                if (name.isEmpty()) continue;
-                cookieManager.setCookie(COOKIE_URL, name + "=; Max-Age=0; Path=/");
-            }
+    private static String cookieValue(String jar, String name) {
+        if (jar == null) return null;
+        for (String piece : jar.split(";")) {
+            String pair = piece.trim();
+            int eq = pair.indexOf('=');
+            if (eq <= 0) continue;
+            if (pair.substring(0, eq).trim().equals(name)) return pair.substring(eq + 1).trim();
         }
-        cookieManager.flush();
+        return null;
+    }
+
+    /** 只有当 MUSIC_U 是打开登录页之后新产生的时候，才算登录成功 */
+    private boolean hasFreshMusicU(String cookie) {
+        String current = cookieValue(cookie, "MUSIC_U");
+        if (current == null || current.isEmpty()) return false;
+        return !current.equals(cookieValue(preLoginCookie, "MUSIC_U"));
     }
 
     private final Runnable poll = new Runnable() {
@@ -69,7 +72,7 @@ public class WebLoginPlugin extends Plugin {
         public void run() {
             if (pending == null) return;
             String cookie = CookieManager.getInstance().getCookie(COOKIE_URL);
-            if (cookie != null && cookie.contains("MUSIC_U=")) {
+            if (hasFreshMusicU(cookie)) {
                 finish(cookie);
                 return;
             }
@@ -109,8 +112,7 @@ public class WebLoginPlugin extends Plugin {
                 }
             });
 
-            clearMusicCookies(cookieManager);
-            webView.loadUrl(LOGIN_URL);
+            preLoginCookie = cookieManager.getCookie(COOKIE_URL);
 
             dialog = new Dialog(getActivity(), android.R.style.Theme_Material_Light_NoActionBar);
             dialog.setContentView(
@@ -126,15 +128,34 @@ public class WebLoginPlugin extends Plugin {
             }
             dialog.setOnDismissListener(ignored -> finish(null));
             dialog.show();
-            handler.postDelayed(poll, 800);
+
+            // 带 Domain 的 Cookie 用逐条 Max-Age=0 删不干净，直接清空整个 WebView Cookie 存储，
+            // 清完再复核一次，确认没有残留的 MUSIC_U 才继续加载登录页。
+            cookieManager.removeAllCookies(removed -> {
+                cookieManager.flush();
+                if (cookieValue(cookieManager.getCookie(COOKIE_URL), "MUSIC_U") != null) {
+                    finishWithError("无法清除上一次的登录状态，请重试");
+                    return;
+                }
+                if (webView == null) return;
+                webView.loadUrl(LOGIN_URL);
+                handler.postDelayed(poll, 800);
+            });
         });
     }
 
-    private void finish(String cookie) {
-        PluginCall call = pending;
-        pending = null;
-        handler.removeCallbacks(poll);
+    /** 退出登录时同步清空 WebView 的 Cookie 存储 */
+    @PluginMethod
+    public void clear(PluginCall call) {
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.removeAllCookies(removed -> {
+            cookieManager.flush();
+            call.resolve();
+        });
+    }
 
+    private void close() {
+        handler.removeCallbacks(poll);
         if (dialog != null) {
             dialog.setOnDismissListener(null);
             dialog.dismiss();
@@ -144,6 +165,12 @@ public class WebLoginPlugin extends Plugin {
             webView.destroy();
             webView = null;
         }
+    }
+
+    private void finish(String cookie) {
+        PluginCall call = pending;
+        pending = null;
+        close();
         if (call == null) return;
 
         if (cookie == null) {
@@ -154,5 +181,12 @@ public class WebLoginPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("cookie", cookie);
         call.resolve(result);
+    }
+
+    private void finishWithError(String message) {
+        PluginCall call = pending;
+        pending = null;
+        close();
+        if (call != null) call.reject(message);
     }
 }
