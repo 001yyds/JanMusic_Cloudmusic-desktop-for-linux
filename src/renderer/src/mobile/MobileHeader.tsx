@@ -16,7 +16,7 @@ export function MobileHeader(): React.JSX.Element {
   const inLibrary = route.page === 'library' || route.page === 'settings'
 
   return (
-    <header className="mobile-header relative z-30 flex shrink-0 items-center gap-2 px-4 pb-2">
+    <header className="lg-bar lg-bar-top mobile-header relative z-30 flex shrink-0 items-center gap-2 px-4 pb-2">
       {canGoBack ? (
         <button
           onClick={back}

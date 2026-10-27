@@ -165,28 +165,52 @@ export function useLiquidGlass(
     })
     observer.observe(el)
 
-    const trackPointer = (event: PointerEvent): void => {
-      const box = el.getBoundingClientRect()
-      if (!box.width || !box.height) return
-      el.style.setProperty('--lg-x', `${((event.clientX - box.left) / box.width) * 100}%`)
-      el.style.setProperty('--lg-y', `${((event.clientY - box.top) / box.height) * 100}%`)
-    }
-    const resetPointer = (): void => {
-      el.style.setProperty('--lg-x', '22%')
-      el.style.setProperty('--lg-y', '-24%')
-    }
-
-    el.addEventListener('pointermove', trackPointer)
-    el.addEventListener('pointerleave', resetPointer)
-
     return () => {
       cancelAnimationFrame(frame)
       observer.disconnect()
-      el.removeEventListener('pointermove', trackPointer)
-      el.removeEventListener('pointerleave', resetPointer)
       svg.remove()
     }
   }, [element, filterId, radius, strength, thickness])
 
   return { ref, filterId, refract }
+}
+
+const GLASS_SELECTOR =
+  '.glass, .glass-tile, .glass-soft, .glass-panel, .glass-strong, .glass-pill, .lg-bar'
+
+/**
+ * 全局只挂一个 pointermove：把指针位置写进当前悬停玻璃元素的 --gx/--gy，
+ * 由 CSS 的 ::before 渲染镜面高光。桌面鼠标和手机手指都走这条。
+ */
+export function useGlassPointer(): void {
+  useEffect(() => {
+    let frame = 0
+    let clientX = 0
+    let clientY = 0
+    let target: HTMLElement | null = null
+
+    const apply = (): void => {
+      frame = 0
+      if (!target || !target.isConnected) return
+      const box = target.getBoundingClientRect()
+      if (!box.width || !box.height) return
+      target.style.setProperty('--gx', `${((clientX - box.left) / box.width) * 100}%`)
+      target.style.setProperty('--gy', `${((clientY - box.top) / box.height) * 100}%`)
+    }
+
+    const onPointerMove = (event: PointerEvent): void => {
+      clientX = event.clientX
+      clientY = event.clientY
+      const hit = event.target as Element | null
+      target = (hit?.closest?.(GLASS_SELECTOR) as HTMLElement | null) ?? null
+      if (!target || frame) return
+      frame = requestAnimationFrame(apply)
+    }
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [])
 }

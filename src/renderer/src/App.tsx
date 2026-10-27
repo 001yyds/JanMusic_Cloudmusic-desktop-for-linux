@@ -11,6 +11,7 @@ import { Sidebar } from './components/Sidebar'
 import { TitleBar } from './components/TitleBar'
 import { Toasts } from './components/Toasts'
 import { useAppBootstrap } from './lib/bootstrap'
+import { useGlassPointer } from './lib/liquidGlass'
 import { isMobile } from './lib/platform'
 import { MobileApp } from './mobile/MobileApp'
 import { usePlayerStore } from './store/player'
@@ -83,9 +84,9 @@ function DesktopApp(): React.JSX.Element {
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={pageKey}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
+                exit={{ y: -6 }}
                 transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                 className="h-full overflow-y-auto"
               >
@@ -105,6 +106,8 @@ function DesktopApp(): React.JSX.Element {
 }
 
 export default function App(): React.JSX.Element {
+  useGlassPointer()
+
   return (
     <MotionConfig
       reducedMotion="user"

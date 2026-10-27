@@ -46,7 +46,7 @@ export function Sidebar(): React.JSX.Element {
   const { loggedIn, profile, playlists } = useAuthStore()
 
   return (
-    <aside className="relative flex w-[216px] shrink-0 flex-col border-r border-white/40 bg-white/[0.07] backdrop-blur-[32px] backdrop-saturate-150 xl:w-[232px]">
+    <aside className="glass-panel relative flex w-[216px] shrink-0 flex-col border-r border-white/25 xl:w-[232px]">
       <nav className="flex flex-col gap-1 px-2.5 pt-1">
         <NavItem icon={Sparkles} label="推荐" active={route.page === 'home'} onClick={() => navigate({ page: 'home' })} />
         <NavItem

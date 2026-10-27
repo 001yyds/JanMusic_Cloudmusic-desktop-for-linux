@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   ChevronUp,
   Heart,
@@ -68,7 +68,6 @@ export function PlayerBar(): React.JSX.Element {
 
   const liked = useLikesStore((state) => state.liked)
   const [scrub, setScrub] = useState<number | null>(null)
-  const shellRef = useRef<HTMLElement>(null)
 
   const total = duration || (current ? songDuration(current) / 1000 : 0)
   const shown = scrub ?? time
@@ -78,27 +77,12 @@ export function PlayerBar(): React.JSX.Element {
 
   return (
     <footer
-      ref={shellRef}
-      onPointerMove={(event) => {
-        const element = shellRef.current
-        if (!element) return
-        const rect = element.getBoundingClientRect()
-        element.style.setProperty('--mx', `${event.clientX - rect.left}px`)
-        element.style.setProperty('--my', `${event.clientY - rect.top}px`)
-      }}
       className={cn(
-        'glass-strong relative z-30 mx-3 mb-3 mt-1 h-[88px] shrink-0 overflow-hidden rounded-[26px] border border-white/50 transition-all duration-300',
+        'lg-bar lg-bar-bottom relative z-30 h-[88px] shrink-0 overflow-hidden border-t border-white/45 transition-all duration-300',
         nowPlayingOpen && 'pointer-events-none translate-y-2 opacity-0'
       )}
     >
       <div className="liquid-sheen" />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.34), transparent 70%)'
-        }}
-      />
 
       <div className="relative z-10 grid h-full grid-cols-[minmax(170px,1fr)_minmax(300px,1.45fr)_minmax(170px,1fr)] items-center gap-4 px-5 xl:gap-6">
         <div className="flex min-w-0 items-center gap-3">
