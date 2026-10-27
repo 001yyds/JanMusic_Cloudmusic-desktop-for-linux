@@ -96,7 +96,19 @@ export function Library(): React.JSX.Element {
       </header>
 
       {likedPlaylist && (
-        <div className="glass-panel relative mt-6 flex items-center gap-3.5 overflow-hidden rounded-[24px] border border-white/45 p-4 sm:mt-7 sm:gap-5 sm:p-5">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() =>
+            navigate({ page: 'playlist', id: likedPlaylist.id, title: likedPlaylist.name })
+          }
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            event.preventDefault()
+            navigate({ page: 'playlist', id: likedPlaylist.id, title: likedPlaylist.name })
+          }}
+          className="glass-panel relative mt-6 flex cursor-pointer items-center gap-3.5 overflow-hidden rounded-[24px] border border-white/45 p-4 transition-transform duration-200 active:scale-[0.99] sm:mt-7 sm:gap-5 sm:p-5"
+        >
           <Cover
             src={coverUrl(likedPlaylist.coverImgUrl, 300)}
             radius={16}
@@ -113,7 +125,10 @@ export function Library(): React.JSX.Element {
             </p>
             <div className="mt-3 flex gap-2">
               <button
-                onClick={() => void playPlaylist(likedPlaylist.id)}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  void playPlaylist(likedPlaylist.id)
+                }}
                 className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-[6px] text-[11.5px] font-medium text-white shadow-[0_6px_18px_rgba(255,25,73,0.28)] transition-all duration-200 hover:scale-[1.03] active:scale-95"
               >
                 <Play size={12} fill="currentColor" />
