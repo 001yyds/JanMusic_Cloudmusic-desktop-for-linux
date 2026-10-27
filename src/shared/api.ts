@@ -45,6 +45,8 @@ export interface NcmApi {
     ): Promise<{ code: number; message?: string }>
     status(): Promise<{ loggedIn: boolean; profile: Profile | null; playlists: Playlist[] }>
     logout(): Promise<{ ok: boolean }>
+    /** 仅手机端：打开官方网页登录页，人工完成短信登录与滑块验证 */
+    webLogin?(): Promise<{ ok: boolean }>
   }
   user: {
     playlists(uid: number): Promise<Playlist[]>

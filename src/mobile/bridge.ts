@@ -1,4 +1,4 @@
-import { Capacitor, CapacitorHttp } from '@capacitor/core'
+import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import type { NcmApi, SearchResult } from '../shared/api'
 import type {
@@ -20,8 +20,10 @@ import type {
 
 declare const __JANMUSIC_VERSION__: string
 
+// weapi 是 PC 网页端接口，Cookie 里也声明了 os=pc。
+// 用 Android UA 配 os=pc 会让设备指纹自相矛盾，更容易触发网易风控。
 const UA =
-  'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36'
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 const PRESET_KEY = '0CoJUm6Qyw8W8jud'
 const IV = '0102030405060708'
 const PUBLIC_KEY = '010001'
@@ -29,6 +31,13 @@ const MODULUS =
   '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7'
 const BASE62 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const COOKIE_KEY = 'janmusic-cookies-v1'
+
+interface WebLoginPlugin {
+  open(): Promise<{ cookie: string }>
+}
+
+// 原生插件：用系统 WebView 打开网易云官方登录页，登录完成后回传 Cookie
+const WebLogin = registerPlugin<WebLoginPlugin>('WebLogin')
 const SETTINGS_KEY = 'janmusic-settings-v1'
 const DOC_DIR = 'JanMusic'
 const DOC_LABEL = 'Documents/JanMusic'
@@ -197,6 +206,7 @@ class MobileNetease {
   private loaded = false
   private dirty = false
   private anonymousTask: Promise<void> | null = null
+  private warmedUp = false
 
   private ensure(): void {
     if (this.loaded) return
@@ -245,11 +255,41 @@ class MobileNetease {
 
   private async ensureAnonymous(): Promise<void> {
     this.ensure()
-    if (this.cookies.has('MUSIC_A') || this.cookies.has('MUSIC_U')) return
-    this.anonymousTask ??= this.registerAnonymous().finally(() => {
+    if (this.cookies.has('MUSIC_U')) return
+    if (this.cookies.has('MUSIC_A') && this.warmedUp) return
+    this.anonymousTask ??= (async () => {
+      await this.warmUp()
+      if (!this.cookies.has('MUSIC_A')) await this.registerAnonymous()
+    })().finally(() => {
       this.anonymousTask = null
     })
     await this.anonymousTask
+  }
+
+  /**
+   * 先访问一次首页，拿到网页端登录态所需的 JSESSIONID-WYYY / _iuqxldmzr_ / NMTID。
+   * 官方网页在登录前一定有这些 Cookie，缺了它们请求看起来就像脚本。
+   */
+  private async warmUp(): Promise<void> {
+    if (this.warmedUp) return
+    this.warmedUp = true
+    try {
+      const response = await CapacitorHttp.request({
+        url: 'https://music.163.com/',
+        method: 'GET',
+        headers: {
+          'User-Agent': UA,
+          Referer: 'https://music.163.com/',
+          Cookie: this.cookieHeader()
+        },
+        connectTimeout: 10000,
+        readTimeout: 15000
+      })
+      this.absorbHeaders(response.headers as Record<string, string>)
+      this.persist()
+    } catch {
+      // 首页预热失败不影响后续请求
+    }
   }
 
   private async registerAnonymous(): Promise<void> {
@@ -386,16 +426,28 @@ class MobileNetease {
     countryCode = '86'
   ): Promise<{ code: number; message?: string }> {
     await this.ensureAnonymous()
-    const result = await this.request('w/login/cellphone', {
+    const payload = {
       type: '1',
       https: 'true',
       phone,
       countrycode: countryCode,
       captcha,
       remember: 'true',
+      rememberLogin: 'true',
       secureCaptcha: '',
       csrf_token: this.csrfToken()
-    })
+    }
+    let result = await this.request('w/login/cellphone', payload)
+    // -462 表示网页端要求行为验证码；旧版登录接口的风控策略不同，作为兜底再试一次
+    if (result.code === -462) {
+      const legacy = await this.request('login/cellphone', {
+        phone,
+        countrycode: countryCode,
+        captcha,
+        rememberLogin: 'true'
+      })
+      if (legacy.code !== -462) result = legacy
+    }
     if (result.code === 200) {
       if (typeof result.cookie === 'string') this.absorbCookieString(result.cookie)
       this.persist()
@@ -407,6 +459,20 @@ class MobileNetease {
     if (!this.isLoggedIn()) return { profile: null, account: null }
     const result = await this.request('w/nuser/account/get', {})
     return { profile: (result.profile as Profile) ?? null, account: result.account ?? null }
+  }
+
+  /**
+   * 打开原生 WebView 让用户走官方登录页（短信 + 滑块验证码都在网页里完成），
+   * 登录成功后从 WebView 的 CookieManager 取出 MUSIC_U 等凭据接管会话。
+   */
+  async webLogin(): Promise<{ ok: boolean }> {
+    const { cookie } = await WebLogin.open()
+    if (cookie) {
+      this.ensure()
+      this.absorbCookieString(cookie)
+      this.persist()
+    }
+    return { ok: this.isLoggedIn() }
   }
 
   logout(): void {
@@ -797,7 +863,8 @@ const api: NcmApi = {
     logout: async () => {
       netease.logout()
       return { ok: true }
-    }
+    },
+    webLogin: () => netease.webLogin()
   },
 
   user: {
