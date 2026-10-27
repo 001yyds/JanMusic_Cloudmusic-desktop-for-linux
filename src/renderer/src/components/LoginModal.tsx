@@ -19,6 +19,18 @@ const HINTS: Record<Phase, string> = {
   success: '登录成功，正在同步音乐库'
 }
 
+function authError(code: number, message: string | undefined, action: 'send' | 'login'): string {
+  if (code === -462 || code === 8810 || (message && /风险|安全验证|安全校验/.test(message))) {
+    return `${message ?? '网易安全校验未通过'}，请关闭代理/VPN 或切换 Wi-Fi/移动网络后重试`
+  }
+  if (action === 'send') {
+    if (code === 405 || code === 501) return '发送验证码过于频繁，请稍后再试'
+    return message || '验证码发送失败，请稍后重试'
+  }
+  if (code === 502 || code === 503) return '验证码错误或已过期'
+  return message || '登录失败，请检查手机号与验证码'
+}
+
 function DesktopLoginModal(): React.JSX.Element {
   const open = useUiStore((state) => state.loginOpen)
   const setOpen = useUiStore((state) => state.setLoginOpen)
@@ -215,9 +227,7 @@ function MobilePhoneLogin(): React.JSX.Element {
     try {
       const result = await api.auth.captchaSend(phone)
       if (result.code !== 200) {
-        const message =
-          result.message ||
-          (result.code === 501 ? '发送过于频繁，请稍后再试' : '验证码发送失败，请稍后重试')
+        const message = authError(result.code, result.message, 'send')
         setError(message)
         toast(message, 'error')
         return
@@ -240,9 +250,7 @@ function MobilePhoneLogin(): React.JSX.Element {
     try {
       const result = await api.auth.phoneLogin(phone, captcha.trim())
       if (result.code !== 200) {
-        const message =
-          result.message ||
-          (result.code === 502 ? '验证码错误或已过期' : '登录失败，请检查手机号与验证码')
+        const message = authError(result.code, result.message, 'login')
         setError(message)
         toast(message, 'error')
         return
@@ -279,7 +287,7 @@ function MobilePhoneLogin(): React.JSX.Element {
           className="fixed inset-0 z-[90] flex items-center justify-center p-4"
         >
           <div
-            className="absolute inset-0 bg-slate-900/15 backdrop-blur-3xl"
+            className="absolute inset-0 bg-slate-900/25"
             onClick={() => setOpen(false)}
           />
           <motion.div
@@ -289,7 +297,7 @@ function MobilePhoneLogin(): React.JSX.Element {
             transition={{ type: 'spring', stiffness: 340, damping: 30 }}
             className="glass-strong relative max-h-[calc(100dvh-32px)] w-[min(380px,calc(100vw-24px))] overflow-y-auto rounded-[28px] border border-white/50 p-6 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.38)]"
           >
-            <div className="liquid-sheen" />
+            <div className="liquid-sheen-static" />
             <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-brand/10 blur-[80px]" />
 
             <button

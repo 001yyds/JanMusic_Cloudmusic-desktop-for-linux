@@ -254,6 +254,22 @@
   animation: sheen 18s var(--ease-apple) infinite;
 }
 
+.liquid-sheen-static {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.22) 46%,
+    transparent 60%
+  );
+}
+
+.liquid-paused .liquid-blob {
+  animation-play-state: paused;
+}
+
 @keyframes eq {
   0%,
   100% {

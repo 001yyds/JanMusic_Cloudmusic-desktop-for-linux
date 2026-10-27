@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { clearCookies, loadCookies, saveCookies } from '../store'
 import type {
   Comment,
@@ -15,6 +16,21 @@ import { encodeWeapi } from './crypto'
 
 const UA =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+const DEVICE_ID_KEY = '3go8&$8*3*3h0k(2)2'
+
+function createDeviceId(): string {
+  return crypto.randomBytes(26).toString('hex').toUpperCase()
+}
+
+function anonymousUsername(deviceId: string): string {
+  const xored = [...deviceId]
+    .map((char, index) =>
+      String.fromCharCode(char.charCodeAt(0) ^ DEVICE_ID_KEY.charCodeAt(index % DEVICE_ID_KEY.length))
+    )
+    .join('')
+  const digest = crypto.createHash('md5').update(Buffer.from(xored, 'utf8')).digest('base64')
+  return Buffer.from(`${deviceId} ${digest}`, 'utf8').toString('base64')
+}
 
 type Json = Record<string, any>
 
@@ -22,16 +38,30 @@ class NeteaseClient {
   private cookies = new Map<string, string>()
   private loaded = false
   private dirty = false
+  private anonymousTask: Promise<void> | null = null
 
   private ensure(): void {
     if (this.loaded) return
     this.loaded = true
     for (const [key, value] of Object.entries(loadCookies())) this.cookies.set(key, value)
+    if (!this.cookies.has('deviceId')) this.cookies.set('deviceId', createDeviceId())
+    if (!this.cookies.has('_ntes_nuid')) {
+      this.cookies.set('_ntes_nuid', crypto.randomBytes(16).toString('hex'))
+    }
+    if (!this.cookies.has('_ntes_nnid')) {
+      this.cookies.set('_ntes_nnid', `${this.cookies.get('_ntes_nuid')},${Date.now()}`)
+    }
+    if (!this.cookies.has('WNMCID')) {
+      this.cookies.set('WNMCID', `${crypto.randomBytes(3).toString('hex')}.${Date.now()}.01.0`)
+    }
+    this.cookies.set('__remember_me', 'true')
+    this.cookies.set('ntes_kaola_ad', '1')
+    this.dirty = true
   }
 
   isLoggedIn(): boolean {
     this.ensure()
-    return this.cookies.has('MUSIC_U') || this.cookies.has('MUSIC_A')
+    return this.cookies.has('MUSIC_U')
   }
 
   private cookieHeader(): string {
@@ -40,6 +70,30 @@ class NeteaseClient {
     if (!parts.has('os')) parts.set('os', 'pc')
     if (!parts.has('appver')) parts.set('appver', '8.10.40')
     return [...parts].map(([key, value]) => `${key}=${value}`).join('; ')
+  }
+
+  private async ensureAnonymous(): Promise<void> {
+    this.ensure()
+    if (this.cookies.has('MUSIC_A') || this.cookies.has('MUSIC_U')) return
+    this.anonymousTask ??= this.registerAnonymous().finally(() => {
+      this.anonymousTask = null
+    })
+    await this.anonymousTask
+  }
+
+  private async registerAnonymous(): Promise<void> {
+    let deviceId = this.cookies.get('deviceId')
+    if (!deviceId) {
+      deviceId = createDeviceId()
+      this.cookies.set('deviceId', deviceId)
+      this.dirty = true
+      this.persist()
+    }
+    try {
+      await this.request('register/anonimous', { username: anonymousUsername(deviceId) })
+    } catch {
+      // 匿名会话只用于降低风控概率，建立失败时仍按普通请求继续
+    }
   }
 
   private absorb(response: Response): void {
@@ -106,6 +160,7 @@ class NeteaseClient {
   }
 
   async qrCreate(): Promise<{ key: string }> {
+    await this.ensureAnonymous()
     const result = await this.request('login/qrcode/unikey', { type: 1 })
     const key = (result.unikey ?? result.data?.unikey) as string | undefined
     if (!key) throw new Error(result.message ?? '无法获取登录二维码')
@@ -122,6 +177,7 @@ class NeteaseClient {
   }
 
   async captchaSend(phone: string, countryCode = '86'): Promise<{ code: number; message?: string }> {
+    await this.ensureAnonymous()
     const result = await this.request('sms/captcha/sent', {
       cellphone: phone,
       ctcode: countryCode,
@@ -136,6 +192,7 @@ class NeteaseClient {
     captcha: string,
     countryCode = '86'
   ): Promise<{ code: number; message?: string }> {
+    await this.ensureAnonymous()
     const result = await this.request('w/login/cellphone', {
       type: '1',
       https: 'true',
@@ -161,6 +218,8 @@ class NeteaseClient {
 
   logout(): void {
     this.cookies.clear()
+    this.loaded = false
+    this.dirty = false
     clearCookies()
   }
 

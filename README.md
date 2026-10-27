@@ -34,15 +34,15 @@ pnpm dist         # 打包 AppImage 到 release/
 janmusic          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/JanMusic-1.2.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/JanMusic-1.3.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./JanMusic-1.2.0-x86_64.AppImage --appimage-extract-and-run
+./JanMusic-1.3.0-x86_64.AppImage --appimage-extract-and-run
 ```
 
 ## Android
 
-APK 下载：[JanMusic-1.2.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.2/JanMusic-1.2.0-android.apk)
+APK 下载：[JanMusic-1.3.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.3/JanMusic-1.3.0-android.apk)
 
 - 手机号验证码登录、歌单、每日推荐、搜索、歌词、播放队列
 - 播放 / 暂停、上一首 / 下一首、进度拖动、音质切换

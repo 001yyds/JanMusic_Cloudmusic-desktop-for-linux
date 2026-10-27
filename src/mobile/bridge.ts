@@ -95,6 +95,94 @@ async function encodeWeapi(payload: unknown): Promise<string> {
   return new URLSearchParams({ params, encSecKey: rsaEncrypt(secret) }).toString()
 }
 
+const MD5_SHIFT = [
+  7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9,
+  14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15,
+  21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
+]
+const MD5_TABLE = Array.from(
+  { length: 64 },
+  (_, index) => Math.floor(Math.abs(Math.sin(index + 1)) * 4294967296) >>> 0
+)
+
+function md5(input: Uint8Array): Uint8Array {
+  const padded = new Uint8Array((((input.length + 8) >> 6) + 1) * 64)
+  padded.set(input)
+  padded[input.length] = 0x80
+  const bits = input.length * 8
+  const view = new DataView(padded.buffer)
+  view.setUint32(padded.length - 8, bits >>> 0, true)
+  view.setUint32(padded.length - 4, Math.floor(bits / 4294967296), true)
+
+  let a0 = 0x67452301
+  let b0 = 0xefcdab89
+  let c0 = 0x98badcfe
+  let d0 = 0x10325476
+  const words = new Uint32Array(16)
+
+  for (let offset = 0; offset < padded.length; offset += 64) {
+    for (let index = 0; index < 16; index += 1) {
+      words[index] = view.getUint32(offset + index * 4, true)
+    }
+    let a = a0
+    let b = b0
+    let c = c0
+    let d = d0
+    for (let index = 0; index < 64; index += 1) {
+      let f: number
+      let g: number
+      if (index < 16) {
+        f = (b & c) | (~b & d)
+        g = index
+      } else if (index < 32) {
+        f = (d & b) | (~d & c)
+        g = (5 * index + 1) % 16
+      } else if (index < 48) {
+        f = b ^ c ^ d
+        g = (3 * index + 5) % 16
+      } else {
+        f = c ^ (b | ~d)
+        g = (7 * index) % 16
+      }
+      const shift = MD5_SHIFT[index]
+      const sum = (a + f + MD5_TABLE[index] + words[g]) >>> 0
+      a = d
+      d = c
+      c = b
+      b = (b + ((sum << shift) | (sum >>> (32 - shift)))) >>> 0
+    }
+    a0 = (a0 + a) >>> 0
+    b0 = (b0 + b) >>> 0
+    c0 = (c0 + c) >>> 0
+    d0 = (d0 + d) >>> 0
+  }
+
+  const output = new Uint8Array(16)
+  const outputView = new DataView(output.buffer)
+  outputView.setUint32(0, a0, true)
+  outputView.setUint32(4, b0, true)
+  outputView.setUint32(8, c0, true)
+  outputView.setUint32(12, d0, true)
+  return output
+}
+
+const DEVICE_ID_KEY = '3go8&$8*3*3h0k(2)2'
+
+function createDeviceId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(26))
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+
+function anonymousUsername(deviceId: string): string {
+  const xored = [...deviceId]
+    .map((char, index) =>
+      String.fromCharCode(char.charCodeAt(0) ^ DEVICE_ID_KEY.charCodeAt(index % DEVICE_ID_KEY.length))
+    )
+    .join('')
+  const digest = toBase64(md5(encoder.encode(xored)))
+  return toBase64(encoder.encode(`${deviceId} ${digest}`))
+}
+
 function normalizeMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null
   return url.replace(/^http:\/\//, 'https://')
@@ -108,6 +196,7 @@ class MobileNetease {
   private cookies = new Map<string, string>()
   private loaded = false
   private dirty = false
+  private anonymousTask: Promise<void> | null = null
 
   private ensure(): void {
     if (this.loaded) return
@@ -118,11 +207,32 @@ class MobileNetease {
     } catch {
       // ignore corrupted cookie storage
     }
+    if (!this.cookies.has('deviceId')) this.cookies.set('deviceId', createDeviceId())
+    if (!this.cookies.has('_ntes_nuid')) {
+      this.cookies.set(
+        '_ntes_nuid',
+        [...crypto.getRandomValues(new Uint8Array(16))]
+          .map((byte) => byte.toString(16).padStart(2, '0'))
+          .join('')
+      )
+    }
+    if (!this.cookies.has('_ntes_nnid')) {
+      this.cookies.set('_ntes_nnid', `${this.cookies.get('_ntes_nuid')},${Date.now()}`)
+    }
+    if (!this.cookies.has('WNMCID')) {
+      const random = [...crypto.getRandomValues(new Uint8Array(3))]
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('')
+      this.cookies.set('WNMCID', `${random}.${Date.now()}.01.0`)
+    }
+    this.cookies.set('__remember_me', 'true')
+    this.cookies.set('ntes_kaola_ad', '1')
+    this.dirty = true
   }
 
   isLoggedIn(): boolean {
     this.ensure()
-    return this.cookies.has('MUSIC_U') || this.cookies.has('MUSIC_A')
+    return this.cookies.has('MUSIC_U')
   }
 
   private cookieHeader(): string {
@@ -131,6 +241,30 @@ class MobileNetease {
     if (!parts.has('os')) parts.set('os', 'pc')
     if (!parts.has('appver')) parts.set('appver', '8.10.40')
     return [...parts].map(([key, value]) => `${key}=${value}`).join('; ')
+  }
+
+  private async ensureAnonymous(): Promise<void> {
+    this.ensure()
+    if (this.cookies.has('MUSIC_A') || this.cookies.has('MUSIC_U')) return
+    this.anonymousTask ??= this.registerAnonymous().finally(() => {
+      this.anonymousTask = null
+    })
+    await this.anonymousTask
+  }
+
+  private async registerAnonymous(): Promise<void> {
+    let deviceId = this.cookies.get('deviceId')
+    if (!deviceId) {
+      deviceId = createDeviceId()
+      this.cookies.set('deviceId', deviceId)
+      this.dirty = true
+      this.persist()
+    }
+    try {
+      await this.request('register/anonimous', { username: anonymousUsername(deviceId) })
+    } catch {
+      // 匿名会话只用于降低风控概率，建立失败时仍按普通请求继续
+    }
   }
 
   private absorbHeaders(headers: Record<string, string> | undefined): void {
@@ -219,6 +353,7 @@ class MobileNetease {
   }
 
   async qrCreate(): Promise<{ key: string }> {
+    await this.ensureAnonymous()
     const result = await this.request('login/qrcode/unikey', { type: 1 })
     const key = (result.unikey ?? result.data?.unikey) as string | undefined
     if (!key) throw new Error(result.message ?? '无法获取登录二维码')
@@ -235,6 +370,7 @@ class MobileNetease {
   }
 
   async captchaSend(phone: string, countryCode = '86'): Promise<{ code: number; message?: string }> {
+    await this.ensureAnonymous()
     const result = await this.request('sms/captcha/sent', {
       cellphone: phone,
       ctcode: countryCode,
@@ -249,6 +385,7 @@ class MobileNetease {
     captcha: string,
     countryCode = '86'
   ): Promise<{ code: number; message?: string }> {
+    await this.ensureAnonymous()
     const result = await this.request('w/login/cellphone', {
       type: '1',
       https: 'true',
@@ -274,7 +411,7 @@ class MobileNetease {
 
   logout(): void {
     this.cookies.clear()
-    this.loaded = true
+    this.loaded = false
     this.dirty = false
     try {
       localStorage.removeItem(COOKIE_KEY)
