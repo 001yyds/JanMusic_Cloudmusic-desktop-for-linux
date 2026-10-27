@@ -1,11 +1,13 @@
 package com.janmusic.player;
 
 import android.app.Dialog;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.CookieManager;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -34,6 +36,33 @@ public class WebLoginPlugin extends Plugin {
     private Dialog dialog;
     private WebView webView;
     private PluginCall pending;
+
+    /** 只允许停留在网易云自己的 https 域名，防止登录页把导航带到钓鱼站点 */
+    private static boolean isAllowedUrl(String url) {
+        if (url == null) return false;
+        Uri uri = Uri.parse(url);
+        if (!"https".equals(uri.getScheme())) return false;
+        String host = uri.getHost();
+        if (host == null) return false;
+        return host.equals("music.163.com") || host.endsWith(".music.163.com");
+    }
+
+    /**
+     * 打开登录页前清掉上一次留下的 music.163.com Cookie，
+     * 否则轮询会立刻读到旧的 MUSIC_U，用户以为登录成功、实际还是旧会话。
+     */
+    private static void clearMusicCookies(CookieManager cookieManager) {
+        String existing = cookieManager.getCookie(COOKIE_URL);
+        if (existing != null) {
+            for (String pair : existing.split(";")) {
+                int eq = pair.indexOf('=');
+                String name = (eq > 0 ? pair.substring(0, eq) : pair).trim();
+                if (name.isEmpty()) continue;
+                cookieManager.setCookie(COOKIE_URL, name + "=; Max-Age=0; Path=/");
+            }
+        }
+        cookieManager.flush();
+    }
 
     private final Runnable poll = new Runnable() {
         @Override
@@ -64,9 +93,23 @@ public class WebLoginPlugin extends Plugin {
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
             settings.setUserAgentString(UA);
+            settings.setAllowFileAccess(false);
+            settings.setAllowContentAccess(false);
+            settings.setAllowFileAccessFromFileURLs(false);
+            settings.setAllowUniversalAccessFromFileURLs(false);
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
             cookieManager.setAcceptThirdPartyCookies(webView, true);
 
-            webView.setWebViewClient(new WebViewClient());
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    // 只放行主框架内的网易云域名，其余导航一律拦下
+                    if (!request.isForMainFrame()) return false;
+                    return !isAllowedUrl(request.getUrl().toString());
+                }
+            });
+
+            clearMusicCookies(cookieManager);
             webView.loadUrl(LOGIN_URL);
 
             dialog = new Dialog(getActivity(), android.R.style.Theme_Material_Light_NoActionBar);
