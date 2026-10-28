@@ -75,6 +75,7 @@ const api = {
   },
   downloads: {
     add: (song: Song, level: Quality) => invoke('download:add', song, level),
+    remove: (id: number, path: string) => invoke<boolean>('download:remove', id, path),
     openFolder: () => invoke<string>('download:open-folder')
   },
   lyrics: {

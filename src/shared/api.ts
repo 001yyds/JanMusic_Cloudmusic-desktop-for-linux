@@ -107,6 +107,7 @@ export interface NcmApi {
   }
   downloads: {
     add(song: Song, level: Quality): Promise<DownloadRecord>
+    remove(id: number, path: string): Promise<boolean>
     openFolder(): Promise<string>
   }
   win: {

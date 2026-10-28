@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { once } from 'node:events'
 import { createWriteStream } from 'node:fs'
-import { mkdir, stat } from 'node:fs/promises'
+import { mkdir, stat, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DownloadRecord, MediaWarmPayload, Quality, Settings, Song } from '../shared/types'
 import {
@@ -41,6 +41,17 @@ async function uniquePath(dir: string, base: string, ext: string): Promise<strin
 }
 
 async function downloadSong(sender: Electron.WebContents, song: Song, level: Quality): Promise<DownloadRecord> {
+  // 同一首歌只保留一份：已有记录且文件仍在时直接复用，避免重复下载
+  const existing = getSettings().downloads.find((item) => item.id === song.id)
+  if (existing) {
+    try {
+      await stat(existing.path)
+      return existing
+    } catch {
+      // 记录还在但文件已丢失，继续重新下载
+    }
+  }
+
   const result = await netease.songUrl(song.id, level)
   if (!result.upstream) throw new Error('该歌曲暂无可下载音源')
   if (result.trial) throw new Error('会员歌曲仅提供试听片段，无法下载')
@@ -167,6 +178,20 @@ export function registerIpc(): void {
   ipcMain.handle('download:add', async (event, song: Song, level: Quality) =>
     downloadSong(event.sender, song, level)
   )
+  ipcMain.handle('download:remove', async (_event, id: number, path: string) => {
+    const current = getSettings()
+    const record = current.downloads.find((item) => item.id === id && item.path === path)
+    if (!record) return false
+    try {
+      await unlink(record.path)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    }
+    updateSettings({
+      downloads: current.downloads.filter((item) => !(item.id === id && item.path === path))
+    })
+    return true
+  })
   ipcMain.handle('download:open-folder', async () => {
     const dir = getSettings().downloadDir
     await mkdir(dir, { recursive: true })

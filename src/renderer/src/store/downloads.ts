@@ -67,12 +67,18 @@ export const useDownloadsStore = create<DownloadsState>((set, get) => ({
   tasks: [],
   running: false,
   enqueue: (songs, level, quiet = true) => {
-    const active = new Set(
-      get()
+    const blocked = new Set<number>([
+      ...get()
         .tasks.filter((task) => task.status === 'queued' || task.status === 'downloading')
-        .map((task) => task.song.id)
-    )
-    const fresh = songs.filter((song) => !active.has(song.id))
+        .map((task) => task.song.id),
+      ...(useSettingsStore.getState().settings?.downloads ?? []).map((record) => record.id)
+    ])
+    const fresh = songs.filter((song) => {
+      if (blocked.has(song.id)) return false
+      // 同一批里重复出现的歌曲也只入队一次
+      blocked.add(song.id)
+      return true
+    })
     if (!fresh.length) return 0
     const tasks = fresh.map<DownloadTask>((song) => ({
       key: `${song.id}-${(sequence += 1)}`,

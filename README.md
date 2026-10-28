@@ -4,7 +4,7 @@
 
 ## 功能
 
-- 液态玻璃界面：所有面板共用一套材质，边缘折射、指针跟随高光、玻璃厚度描边
+- 液态玻璃界面：所有面板共用一套材质，边缘折射、指针跟随高光、玻璃厚度描边，背景色可透出
 - 桌面歌词（仅桌面端）：Wayland 下用 wlr-layer-shell 把歌词浮在桌面最上层，可拖动、可锁定穿透、支持翻译行
 - 桌面端扫码登录；手机端支持扫码、手机号验证码，以及内嵌官方网页登录（风控滑块在网页内完成）
 - 歌单与「我喜欢的音乐」自动同步，收藏页可直接打开歌单
@@ -15,7 +15,7 @@
 - 全局搜索：单曲 / 歌单 / 歌手
 - 音质切换（标准 / 较高 / 极高 / 无损 / Hi-Res），会员歌曲自动降级并标记「试听」
 - 播放 15 秒后自动把整首补全到本地缓存，下次直接离线播放
-- 单曲下载与歌单「全部下载」，下载列表显示进度与结果
+- 单曲下载与歌单「全部下载」，下载列表显示进度与结果；已下载歌曲可删除并同时清理本地文件，同一首歌不会重复下载
 - 网易云风格歌曲评论：精彩 / 最热 / 最新、楼层回复、点赞、发布与删除
 - 单曲下载到 `~/Music/JanMusic`，下载记录可查
 - 播放队列、音质、音量、播放模式跨重启记忆
@@ -41,10 +41,10 @@ makepkg -D build/arch -f --noconfirm              # Arch 包
 janmusic          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/JanMusic-1.5.2-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/JanMusic-1.6.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./JanMusic-1.5.2-x86_64.AppImage --appimage-extract-and-run
+./JanMusic-1.6.0-x86_64.AppImage --appimage-extract-and-run
 ```
 
 桌面歌词依赖系统的 GTK3 与 layer-shell（Arch：`sudo pacman -S gtk3 python-gobject gtk-layer-shell`）。
@@ -53,15 +53,15 @@ janmusic          # 或从应用菜单启动
 
 | 发行版 | 文件 | 安装 |
 | --- | --- | --- |
-| Arch Linux | `janmusic-1.5.2-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.5.2-1-x86_64.pkg.tar.zst` |
-| Debian / Ubuntu | `JanMusic-1.5.2-amd64.deb` | `sudo apt install ./JanMusic-1.5.2-amd64.deb` |
-| 通用便携 | `JanMusic-1.5.2-x86_64.AppImage` | `chmod +x` 后直接运行 |
+| Arch Linux | `janmusic-1.6.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U janmusic-1.6.0-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `JanMusic-1.6.0-amd64.deb` | `sudo apt install ./JanMusic-1.6.0-amd64.deb` |
+| 通用便携 | `JanMusic-1.6.0-x86_64.AppImage` | `chmod +x` 后直接运行 |
 
 下载地址：[Releases](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/latest)
 
 ## Android
 
-APK 下载：[JanMusic-1.5.2-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.5.2/JanMusic-1.5.2-android.apk)
+APK 下载：[JanMusic-1.6.0-android.apk](https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux/releases/download/v1.6.0/JanMusic-1.6.0-android.apk)
 
 - 三种登录方式：扫码、手机号验证码、内嵌官方网页登录（可完成滑块验证）
 - 歌单、每日推荐、搜索、歌词、播放队列

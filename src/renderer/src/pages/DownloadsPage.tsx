@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AlertCircle, CheckCircle2, Download, FolderOpen, HardDrive, Loader2, Music4, Trash2, X } from 'lucide-react'
+import type { DownloadRecord } from '../../../shared/types'
 import { coverUrl, songArtists } from '../lib/api'
 import { cn } from '../lib/cn'
 import { formatBytes } from '../lib/format'
@@ -48,6 +49,23 @@ export function DownloadsPage(): React.JSX.Element {
       toast('清理缓存失败', 'error')
     } finally {
       setClearing(false)
+    }
+  }
+
+  const removeDownload = async (item: DownloadRecord): Promise<void> => {
+    try {
+      const removed = await window.ncm.downloads.remove(item.id, item.path)
+      if (!removed) {
+        toast('删除失败', 'error')
+        return
+      }
+      tasks
+        .filter((task) => task.song.id === item.id && task.status === 'done')
+        .forEach((task) => removeTask(task.key))
+      await refresh()
+      toast(`已删除《${item.name}》`, 'success')
+    } catch {
+      toast('删除失败', 'error')
     }
   }
 
@@ -199,7 +217,7 @@ export function DownloadsPage(): React.JSX.Element {
             {downloads.map((item) => (
               <div
                 key={`${item.id}-${item.createdAt}`}
-                className="group grid grid-cols-[44px_minmax(0,2.4fr)_70px_86px] items-center gap-3 rounded-[14px] px-2.5 py-2 transition-colors duration-200 hover:bg-white/25 min-[1040px]:grid-cols-[44px_minmax(0,2.4fr)_minmax(0,1.4fr)_70px_86px_90px]"
+                className="group grid grid-cols-[40px_minmax(0,1fr)_48px_60px_28px] items-center gap-2 rounded-[14px] px-2.5 py-2 transition-colors duration-200 hover:bg-white/25 sm:grid-cols-[44px_minmax(0,2.4fr)_70px_86px_28px] sm:gap-3 min-[1040px]:grid-cols-[44px_minmax(0,2.4fr)_minmax(0,1.4fr)_70px_86px_90px_28px]"
               >
                 <Cover src={coverUrl(item.cover, 100)} radius={8} className="h-10 w-10" />
                 <div className="min-w-0">
@@ -212,6 +230,14 @@ export function DownloadsPage(): React.JSX.Element {
                 <div className="tabular hidden text-right text-[10px] text-black/25 min-[1040px]:block">
                   {new Date(item.createdAt).toLocaleDateString('zh-CN')}
                 </div>
+                <button
+                  onClick={() => void removeDownload(item)}
+                  className="flex h-7 w-7 items-center justify-center rounded-[8px] text-black/25 transition-all duration-200 hover:bg-white/35 hover:text-brand active:scale-90"
+                  title="删除下载"
+                  aria-label={`删除 ${item.name}`}
+                >
+                  <Trash2 size={13} />
+                </button>
               </div>
             ))}
           </div>

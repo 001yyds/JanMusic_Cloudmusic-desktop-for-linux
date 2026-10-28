@@ -768,7 +768,51 @@ async function fileExists(path: string, directory: Directory): Promise<boolean> 
   }
 }
 
+function localRelativePath(path: string): string {
+  return path.startsWith(`${DOC_LABEL}/`) ? path.slice(DOC_LABEL.length + 1) : path
+}
+
+async function downloadedFileExists(path: string): Promise<boolean> {
+  if (path.startsWith('file://')) {
+    try {
+      await Filesystem.stat({ path: decodeURIComponent(path.slice('file://'.length)) })
+      return true
+    } catch {
+      return false
+    }
+  }
+  const relative = localRelativePath(path)
+  return (
+    (await fileExists(relative, Directory.Documents)) ||
+    (await fileExists(relative, Directory.External))
+  )
+}
+
+async function deleteDownloadedFile(path: string): Promise<void> {
+  if (path.startsWith('file://')) {
+    try {
+      await Filesystem.deleteFile({ path: decodeURIComponent(path.slice('file://'.length)) })
+    } catch {
+      // 文件可能已被外部删除
+    }
+    return
+  }
+  const relative = localRelativePath(path)
+  for (const directory of [Directory.Documents, Directory.External]) {
+    try {
+      await Filesystem.deleteFile({ path: relative, directory })
+      return
+    } catch {
+      // 尝试下一个目录
+    }
+  }
+}
+
 async function downloadSong(song: Song, level: Quality): Promise<DownloadRecord> {
+  // 同一首歌只保留一份：已有记录且文件仍在时直接复用，避免重复下载
+  const existing = readSettings().downloads.find((item) => item.id === song.id)
+  if (existing && (await downloadedFileExists(existing.path))) return existing
+
   const result = await netease.songUrl(song.id, level)
   if (!result.upstream) throw new Error('该歌曲暂无可下载音源')
   if (result.trial) throw new Error('会员歌曲仅提供试听片段，无法下载')
@@ -947,6 +991,17 @@ const api: NcmApi = {
 
   downloads: {
     add: (song, level) => downloadSong(song, level),
+    remove: async (id, path) => {
+      const current = readSettings()
+      const record = current.downloads.find((item) => item.id === id && item.path === path)
+      if (!record) return false
+      await deleteDownloadedFile(record.path)
+      writeSettings({
+        ...current,
+        downloads: current.downloads.filter((item) => !(item.id === id && item.path === path))
+      })
+      return true
+    },
     openFolder: async () => readSettings().downloadDir
   },
 

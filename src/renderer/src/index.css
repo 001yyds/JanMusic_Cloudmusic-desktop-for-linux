@@ -117,11 +117,11 @@
     isolation: isolate;
     background: linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.46),
-      rgba(255, 255, 255, 0.16) 52%,
-      rgba(255, 255, 255, 0.3)
+      rgba(255, 255, 255, 0.26),
+      rgba(255, 255, 255, 0.05) 52%,
+      rgba(255, 255, 255, 0.14)
     );
-    backdrop-filter: blur(26px) saturate(190%) brightness(1.04);
+    backdrop-filter: blur(26px) saturate(190%) brightness(1);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.9),
       inset 1px 0 0 rgba(255, 255, 255, 0.42),
@@ -148,12 +148,12 @@
     background:
       radial-gradient(
         130% 120% at var(--gx) var(--gy),
-        rgba(255, 255, 255, 0.8),
-        rgba(255, 255, 255, 0.18) 38%,
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0.1) 38%,
         transparent 68%
       ),
-      linear-gradient(112deg, transparent 40%, rgba(255, 255, 255, 0.22) 49%, transparent 58%);
-    opacity: 0.9;
+      linear-gradient(112deg, transparent 40%, rgba(255, 255, 255, 0.14) 49%, transparent 58%);
+    opacity: 0.72;
   }
 
   /* 玻璃厚度：外缘 1px 亮边 + 内侧冷色阴影 */
@@ -177,15 +177,15 @@
   }
 
   .glass {
-    backdrop-filter: blur(26px) saturate(190%) brightness(1.04);
+    backdrop-filter: blur(26px) saturate(190%) brightness(1);
   }
 
   .glass-tile {
-    backdrop-filter: blur(20px) saturate(185%) brightness(1.04);
+    backdrop-filter: blur(20px) saturate(185%) brightness(1);
   }
 
   .glass-soft {
-    backdrop-filter: blur(18px) saturate(175%) brightness(1.03);
+    backdrop-filter: blur(18px) saturate(175%) brightness(1);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.7),
       inset 0 0 0 1px rgba(255, 255, 255, 0.2),
@@ -193,11 +193,11 @@
   }
 
   .glass-panel {
-    backdrop-filter: blur(36px) saturate(195%) brightness(1.05);
+    backdrop-filter: blur(36px) saturate(195%) brightness(1);
   }
 
   .glass-strong {
-    backdrop-filter: blur(46px) saturate(205%) brightness(1.06);
+    backdrop-filter: blur(46px) saturate(205%) brightness(1);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.98),
       inset 1px 0 0 rgba(255, 255, 255, 0.55),
@@ -208,13 +208,13 @@
   }
 
   .glass-pill {
-    backdrop-filter: blur(22px) saturate(190%) brightness(1.05);
+    backdrop-filter: blur(22px) saturate(190%) brightness(1);
   }
 
   /* ---- 顶栏 / 底栏：与内容区共用同一块材质，靠 1px 亮边接缝 ---- */
 
   .lg-bar {
-    backdrop-filter: blur(40px) saturate(195%) brightness(1.05);
+    backdrop-filter: blur(40px) saturate(195%) brightness(1);
   }
 
   .lg-bar-top {
@@ -235,7 +235,7 @@
      不要加 -webkit- 前缀：Chromium 的 -webkit-backdrop-filter 不认 url()，
      而且构建时 Lightning CSS 会保留前缀、丢掉标准属性，导致整条规则失效。 */
   .lg-refract {
-    backdrop-filter: var(--lg-filter) blur(2px) saturate(200%) brightness(1.06);
+    backdrop-filter: var(--lg-filter) blur(2px) saturate(200%) brightness(1.02);
   }
 
   @media (prefers-reduced-transparency: reduce) {
