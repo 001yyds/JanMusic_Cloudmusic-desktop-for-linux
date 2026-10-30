@@ -38,7 +38,7 @@ export function TitleBar(): React.JSX.Element {
   }, [])
 
   return (
-    <header className="lg-bar lg-bar-top drag relative z-30 flex h-[52px] shrink-0 items-center gap-2 px-4">
+    <header className="lg-bar lg-bar-top relative z-30 flex h-[52px] shrink-0 items-center gap-2 px-4">
       <div className="no-drag flex items-center gap-2.5 pl-0.5">
         <Logo size={24} />
         <span className="text-[10.5px] font-semibold tracking-[0.28em] text-black/65">BETTERNCM</span>
@@ -55,10 +55,13 @@ export function TitleBar(): React.JSX.Element {
         </button>
       </div>
 
-      <div className="drag flex flex-1 justify-center">
+      <div className="flex flex-1 items-center justify-center">
+        {/* 拖动区只能放在没有控件的空白处：Wayland（niri/KWin）会吞掉 drag 矩形内的全部输入，
+            子元素的 no-drag 救不回来，所以这里用两侧的空白条承接拖动 */}
+        <div className="drag h-full flex-1" />
         <button
           onClick={() => navigate({ page: 'search' })}
-          className="glass no-drag group flex h-[34px] w-[280px] items-center gap-2.5 rounded-full px-4 text-left transition-all duration-300 hover:bg-white/30 xl:w-[360px]"
+          className="glass no-drag group flex h-[34px] w-[280px] shrink-0 items-center gap-2.5 rounded-full px-4 text-left transition-all duration-300 hover:bg-white/30 xl:w-[360px]"
         >
           <Search size={14} className="text-black/35 transition-colors duration-200 group-hover:text-black/60" />
           <span className="flex-1 text-[12px] text-black/35">搜索歌曲、歌手、歌单</span>
@@ -66,6 +69,7 @@ export function TitleBar(): React.JSX.Element {
             Ctrl K
           </kbd>
         </button>
+        <div className="drag h-full flex-1" />
       </div>
 
       <div className="no-drag flex items-center gap-0.5">
