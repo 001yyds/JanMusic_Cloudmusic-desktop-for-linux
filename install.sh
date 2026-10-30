@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$ROOT/release/linux-unpacked"
-APP_NAME="janmusic"
+APP_NAME="betterncm"
 APP_DIR="$HOME/.local/opt/$APP_NAME"
 BIN_DIR="$HOME/.local/bin"
 DESKTOP_DIR="$HOME/.local/share/applications"
@@ -22,7 +22,7 @@ ln -sf "$APP_DIR/$APP_NAME" "$BIN_DIR/$APP_NAME"
 
 cat > "$DESKTOP_DIR/$APP_NAME.desktop" <<EOF
 [Desktop Entry]
-Name=JanMusic
+Name=BetterNCM
 Comment=网易云音乐客户端
 Comment[zh_CN]=网易云音乐客户端
 Exec=$BIN_DIR/$APP_NAME %U
@@ -31,7 +31,7 @@ Terminal=false
 Type=Application
 Categories=AudioVideo;Audio;Player;
 Keywords=music;netease;player;
-StartupWMClass=janmusic
+StartupWMClass=betterncm
 EOF
 
 if command -v update-desktop-database >/dev/null 2>&1; then

@@ -384,7 +384,7 @@ export function SettingsPage(): React.JSX.Element {
         </Section>
 
         <Section title="关于" caption="About">
-          <Row icon={Info} title="JanMusic" hint={isMobile() ? '网易云音乐 Android 客户端' : '网易云音乐桌面客户端'}>
+          <Row icon={Info} title="BetterNCM" hint={isMobile() ? '网易云音乐 Android 客户端' : '网易云音乐桌面客户端'}>
             <span className="tabular text-[11px] text-black/40">
               {appInfo ? `v${appInfo.version}` : '—'}
             </span>

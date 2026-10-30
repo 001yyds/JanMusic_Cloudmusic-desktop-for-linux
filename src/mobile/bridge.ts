@@ -18,7 +18,7 @@ import type {
   SongUrlResult
 } from '../shared/types'
 
-declare const __JANMUSIC_VERSION__: string
+declare const __BETTERNCM_VERSION__: string
 
 // weapi 是 PC 网页端接口，Cookie 里也声明了 os=pc。
 // 用 Android UA 配 os=pc 会让设备指纹自相矛盾，更容易触发网易风控。
@@ -30,7 +30,7 @@ const PUBLIC_KEY = '010001'
 const MODULUS =
   '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7'
 const BASE62 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-const COOKIE_KEY = 'janmusic-cookies-v1'
+const COOKIE_KEY = 'betterncm-cookies-v1'
 
 interface WebLoginPlugin {
   open(): Promise<{ cookie: string }>
@@ -39,9 +39,9 @@ interface WebLoginPlugin {
 
 // 原生插件：用系统 WebView 打开网易云官方登录页，登录完成后回传 Cookie
 const WebLogin = registerPlugin<WebLoginPlugin>('WebLogin')
-const SETTINGS_KEY = 'janmusic-settings-v1'
-const DOC_DIR = 'JanMusic'
-const DOC_LABEL = 'Documents/JanMusic'
+const SETTINGS_KEY = 'betterncm-settings-v1'
+const DOC_DIR = 'BetterNCM'
+const DOC_LABEL = 'Documents/BetterNCM'
 
 type Json = Record<string, any>
 
@@ -982,7 +982,7 @@ const api: NcmApi = {
 
   app: {
     info: async (): Promise<AppInfo> => ({
-      version: __JANMUSIC_VERSION__,
+      version: __BETTERNCM_VERSION__,
       electron: '—',
       chrome: chromeVersion(),
       node: '—'

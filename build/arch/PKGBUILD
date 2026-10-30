@@ -1,10 +1,10 @@
 # Maintainer: jvvoch <jvvoch@localhost>
-pkgname=janmusic
-pkgver=1.6.0
+pkgname=betterncm
+pkgver=1.7.0
 pkgrel=1
 pkgdesc="网易云音乐桌面客户端"
 arch=('x86_64')
-url="https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux"
+url="https://github.com/001yyds/Better_NCM_Linux"
 license=('MIT')
 depends=(
   'gtk3'
@@ -42,27 +42,27 @@ sha256sums=()
 package() {
   local src="$startdir/../../release/linux-unpacked"
 
-  install -d "$pkgdir/opt/janmusic"
-  cp -a "$src/." "$pkgdir/opt/janmusic/"
-  chmod 4755 "$pkgdir/opt/janmusic/chrome-sandbox"
+  install -d "$pkgdir/opt/betterncm"
+  cp -a "$src/." "$pkgdir/opt/betterncm/"
+  chmod 4755 "$pkgdir/opt/betterncm/chrome-sandbox"
 
   install -d "$pkgdir/usr/bin"
-  ln -s /opt/janmusic/janmusic "$pkgdir/usr/bin/janmusic"
+  ln -s /opt/betterncm/betterncm "$pkgdir/usr/bin/betterncm"
 
   install -d "$pkgdir/usr/share/applications"
-  cat > "$pkgdir/usr/share/applications/janmusic.desktop" <<'EOF'
+  cat > "$pkgdir/usr/share/applications/betterncm.desktop" <<'EOF'
 [Desktop Entry]
-Name=JanMusic
+Name=BetterNCM
 Comment=网易云音乐桌面客户端
 Comment[zh_CN]=网易云音乐桌面客户端
-Exec=janmusic %U
-Icon=janmusic
+Exec=betterncm %U
+Icon=betterncm
 Terminal=false
 Type=Application
 Categories=AudioVideo;Audio;Player;
 Keywords=music;netease;player;
-StartupWMClass=janmusic
+StartupWMClass=betterncm
 EOF
 
-  install -Dm644 "$startdir/../icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/janmusic.png"
+  install -Dm644 "$startdir/../icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/betterncm.png"
 }

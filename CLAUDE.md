@@ -1,4 +1,4 @@
-# JanMusic · AI 执行手册
+# BetterNCM · AI 执行手册
 
 本文件是给 AI 助手的强制清单，每次任务收尾前逐项自检。
 
@@ -42,9 +42,9 @@
 ## 五、发布（四类资产全部齐全）
 
 19. 桌面 AppImage：`pnpm exec electron-builder --linux AppImage deb`
-20. Debian 包：同上产出 `release/JanMusic-x.y.z-amd64.deb`
-21. Arch 包：`makepkg -D build/arch -f --noconfirm`，产出 `janmusic-x.y.z-1-x86_64.pkg.tar.zst`，复制到 `release/`
-22. Android：`pnpm mobile:apk`，复制 `app-release.apk` 为 `release/JanMusic-x.y.z-android.apk`
+20. Debian 包：同上产出 `release/BetterNCM-x.y.z-amd64.deb`
+21. Arch 包：`makepkg -D build/arch -f --noconfirm`，产出 `betterncm-x.y.z-1-x86_64.pkg.tar.zst`，复制到 `release/`
+22. Android：`pnpm mobile:apk`，复制 `app-release.apk` 为 `release/BetterNCM-x.y.z-android.apk`
 23. 用 `gh release create/upload` 上传**全部四类资产**（`--clobber` 覆盖重传）。
 24. 上传后必须核对：`gh release view <tag> --json author,assets`
     - `author.login` 必须是 `001yyds`
@@ -91,7 +91,7 @@ makepkg -D build/arch -f --noconfirm
 pnpm exec electron . --remote-debugging-port=9222 --no-sandbox
 
 # 发布
-gh release create vX.Y.Z release/* --title "JanMusic X.Y.Z" --notes-file /tmp/notes.md
+gh release create vX.Y.Z release/* --title "BetterNCM X.Y.Z" --notes-file /tmp/notes.md
 gh release view vX.Y.Z --json author,assets
 ```
 

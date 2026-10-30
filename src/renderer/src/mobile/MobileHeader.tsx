@@ -28,7 +28,7 @@ export function MobileHeader(): React.JSX.Element {
       ) : (
         <div className="flex items-center gap-2 pl-0.5">
           <Logo size={23} />
-          <span className="text-[10px] font-semibold tracking-[0.26em] text-black/60">JANMUSIC</span>
+          <span className="text-[10px] font-semibold tracking-[0.26em] text-black/60">BETTERNCM</span>
         </div>
       )}
 

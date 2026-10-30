@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.janmusic.player',
-  appName: 'JanMusic',
+  appId: 'com.betterncm.player',
+  appName: 'BetterNCM',
   webDir: 'out/mobile',
   loggingBehavior: 'none',
   server: {

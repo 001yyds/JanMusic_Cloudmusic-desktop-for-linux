@@ -10,7 +10,7 @@ export interface DesktopLyricState {
   playing?: boolean
 }
 
-const CONFIG_DIR = join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'JanMusic')
+const CONFIG_DIR = join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'BetterNCM')
 const LOG_PATH = join(CONFIG_DIR, 'desktop-lyrics.log')
 
 let child: ChildProcess | null = null

@@ -514,7 +514,7 @@ if ('mediaSession' in navigator) {
   }
 }
 
-const PERSIST_KEY = 'janmusic-player-v1'
+const PERSIST_KEY = 'betterncm-player-v1'
 
 usePlayerStore.subscribe((state, previous) => {
   if (state.queue !== previous.queue || state.index !== previous.index || state.mode !== previous.mode) {

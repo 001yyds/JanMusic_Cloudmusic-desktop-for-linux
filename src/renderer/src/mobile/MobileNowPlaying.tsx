@@ -170,7 +170,7 @@ export function MobileNowPlaying(): React.JSX.Element {
                 <div className="text-[9px] uppercase tracking-[0.28em] text-black/40">
                   {lyricsOpen ? '歌词' : '正在播放'}
                 </div>
-                <div className="truncate text-[11px] text-black/50">{album?.name ?? 'JanMusic'}</div>
+                <div className="truncate text-[11px] text-black/50">{album?.name ?? 'BetterNCM'}</div>
               </div>
               <div className="flex items-center gap-1.5">
                 <button

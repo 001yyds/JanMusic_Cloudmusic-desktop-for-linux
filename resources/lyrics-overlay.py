@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""JanMusic 桌面歌词覆盖层（Wayland / wlr-layer-shell）。
+"""BetterNCM 桌面歌词覆盖层（Wayland / wlr-layer-shell）。
 
 Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定穿透实现；
 这里是 Linux 的等价物：layer-shell 的 OVERLAY 层，niri 与 KWin Plasma 6 都支持。
@@ -9,7 +9,7 @@ Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定�
 - 锁定后整个图层点击穿透，只能从主程序解锁
 - 拖动把手势挂在「不动的全屏窗口」上，用 gesture 偏移计算位移
   （Wayland 不给全局指针坐标，窗口一动局部坐标就被抵消）
-- 位置 / 锁定 / 字号持久化到 ~/.config/JanMusic/desktop-lyrics.json
+- 位置 / 锁定 / 字号持久化到 ~/.config/BetterNCM/desktop-lyrics.json
 
 协议：stdin 每行一个 JSON
   {"cmd":"state","current":"...","secondary":"...","playing":true}
@@ -34,7 +34,7 @@ import cairo  # noqa: E402
 from gi.repository import Gdk, GLib, Gtk, GtkLayerShell  # noqa: E402
 
 CONFIG_DIR = os.path.join(
-    os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "JanMusic"
+    os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "BetterNCM"
 )
 CONFIG_PATH = os.path.join(CONFIG_DIR, "desktop-lyrics.json")
 
@@ -112,7 +112,7 @@ class Overlay:
 
         GtkLayerShell.init_for_window(self.window)
         try:
-            GtkLayerShell.set_namespace(self.window, "janmusic-lyrics")
+            GtkLayerShell.set_namespace(self.window, "betterncm-lyrics")
         except Exception:
             pass
         GtkLayerShell.set_layer(self.window, GtkLayerShell.Layer.OVERLAY)

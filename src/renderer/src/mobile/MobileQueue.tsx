@@ -121,7 +121,7 @@ export function MobileQueue(): React.JSX.Element {
           </div>
 
           <div className="mobile-bottom px-5 pb-3 pt-1 text-center text-[10px] text-black/30">
-            {queue.length ? `第 ${index + 1} 首 · 共 ${queue.length} 首` : 'JanMusic'}
+            {queue.length ? `第 ${index + 1} 首 · 共 ${queue.length} 首` : 'BetterNCM'}
           </div>
         </motion.aside>
       ]}

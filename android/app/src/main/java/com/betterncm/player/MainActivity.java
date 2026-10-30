@@ -1,4 +1,4 @@
-package com.janmusic.player;
+package com.betterncm.player;
 
 import android.os.Bundle;
 

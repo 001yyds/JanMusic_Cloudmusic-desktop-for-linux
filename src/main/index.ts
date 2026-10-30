@@ -18,7 +18,7 @@ protocol.registerSchemesAsPrivileged([
   }
 ])
 
-app.setName('JanMusic')
+app.setName('BetterNCM')
 app.commandLine.appendSwitch('ozone-platform-hint', 'auto')
 app.commandLine.appendSwitch('enable-features', 'WaylandWindowDecorations,GlobalShortcutsPortal')
 

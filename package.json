@@ -1,13 +1,13 @@
 {
-  "name": "janmusic",
-  "version": "1.6.0",
+  "name": "betterncm",
+  "version": "1.7.0",
   "description": "网易云音乐客户端",
   "main": "./out/main/index.js",
   "author": "jvvoch",
-  "homepage": "https://github.com/001yyds/JanMusic_Cloudmusic-desktop-for-linux",
+  "homepage": "https://github.com/001yyds/Better_NCM_Linux",
   "license": "MIT",
   "private": true,
-  "desktopName": "janmusic",
+  "desktopName": "betterncm",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",

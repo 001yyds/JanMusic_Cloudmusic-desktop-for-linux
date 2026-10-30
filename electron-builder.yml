@@ -1,5 +1,5 @@
-appId: com.janmusic.player
-productName: JanMusic
+appId: com.betterncm.player
+productName: BetterNCM
 directories:
   output: release
   buildResources: build
@@ -16,18 +16,18 @@ linux:
     - deb
   category: AudioVideo
   icon: build/icon.png
-  executableName: janmusic
+  executableName: betterncm
   maintainer: jvvoch <jvvoch@localhost>
-  vendor: JanMusic
+  vendor: BetterNCM
   synopsis: 网易云音乐桌面客户端
-  description: JanMusic 是一个基于 Electron 的网易云音乐桌面客户端，支持扫码登录、歌单同步、搜索、播放与离线缓存。
+  description: BetterNCM 是一个基于 Electron 的网易云音乐桌面客户端，支持扫码登录、歌单同步、搜索、播放与离线缓存。
   syncDesktopName: true
   desktop:
     entry:
-      Name: JanMusic
+      Name: BetterNCM
       Comment: 网易云音乐客户端
       Comment[zh_CN]: 网易云音乐客户端
       Categories: AudioVideo;Audio;Player;
       Keywords: music;netease;player;
-      StartupWMClass: janmusic
+      StartupWMClass: betterncm
   artifactName: ${productName}-${version}-${arch}.${ext}

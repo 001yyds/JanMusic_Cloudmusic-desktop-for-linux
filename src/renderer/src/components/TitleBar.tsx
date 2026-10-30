@@ -41,7 +41,7 @@ export function TitleBar(): React.JSX.Element {
     <header className="lg-bar lg-bar-top drag relative z-30 flex h-[52px] shrink-0 items-center gap-2 px-4">
       <div className="no-drag flex items-center gap-2.5 pl-0.5">
         <Logo size={24} />
-        <span className="text-[10.5px] font-semibold tracking-[0.28em] text-black/65">JANMUSIC</span>
+        <span className="text-[10.5px] font-semibold tracking-[0.28em] text-black/65">BETTERNCM</span>
       </div>
 
       <div className="no-drag ml-4 flex items-center">

@@ -15,7 +15,7 @@ function defaults(): Settings {
   return {
     quality: 'exhigh',
     volume: 0.75,
-    downloadDir: join(app.getPath('music'), 'JanMusic'),
+    downloadDir: join(app.getPath('music'), 'BetterNCM'),
     downloads: [],
     lyricFontSize: 22,
     desktopLyrics: false,

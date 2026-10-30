@@ -10,7 +10,7 @@ export default defineConfig({
   root: resolve('src/mobile'),
   base: './',
   define: {
-    __JANMUSIC_VERSION__: JSON.stringify(pkg.version)
+    __BETTERNCM_VERSION__: JSON.stringify(pkg.version)
   },
   resolve: {
     alias: {

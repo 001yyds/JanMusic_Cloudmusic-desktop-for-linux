@@ -182,7 +182,7 @@ export function DownloadsPage(): React.JSX.Element {
         <div className="min-w-0 flex-1 text-[11px] text-black/45 sm:text-[11.5px]">
           {isMobile() ? (
             <>
-              下载位置 <span className="font-medium text-black/75">Documents/JanMusic</span>
+              下载位置 <span className="font-medium text-black/75">Documents/BetterNCM</span>
               <span className="mx-1.5 text-black/15">·</span>
               已下载歌曲可直接离线播放
             </>

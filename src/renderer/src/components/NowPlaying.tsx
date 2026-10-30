@@ -167,7 +167,7 @@ function DesktopNowPlaying(): React.JSX.Element {
               </button>
               <div className="pointer-events-none ml-2 min-w-0 flex-1 text-center">
                 <div className="text-[10px] uppercase tracking-[0.28em] text-black/45">正在播放</div>
-                <div className="truncate text-[11.5px] text-black/55">{album?.name ?? 'JanMusic'}</div>
+                <div className="truncate text-[11.5px] text-black/55">{album?.name ?? 'BetterNCM'}</div>
               </div>
               <div className="no-drag flex items-center gap-1">
                 <button
