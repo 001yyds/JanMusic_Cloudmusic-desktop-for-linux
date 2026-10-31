@@ -1,6 +1,6 @@
 {
   "name": "betterncm",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "网易云音乐客户端",
   "main": "./out/main/index.js",
   "author": "jvvoch",

@@ -10,7 +10,7 @@ Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定�
 - 锁定后全部图层点击穿透，只能从主程序解锁
 - 拖动把手势挂在「不动的全屏窗口」上，用 gesture 偏移计算位移
   （Wayland 不给全局指针坐标，窗口一动局部坐标就被抵消）
-- 拖出屏幕边缘时切到相邻屏幕，从它靠近来向的一侧进入；切屏后需重新按住再拖
+- 位移按全局坐标计算：按住拖动时字幕跟着指针连续跨屏，不需要松手重按
 - 位置（含所在屏幕）/ 锁定 / 字号持久化到 ~/.config/BetterNCM/desktop-lyrics.json
 
 协议：stdin 每行一个 JSON
@@ -42,8 +42,9 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "desktop-lyrics.json")
 
 DEFAULT_CONFIG = {"x": 160, "y": 640, "monitor": 0, "locked": False, "font": 30}
 
-# 拖出屏幕时，字幕进入相邻屏幕后离边缘保留的距离
-HANDOFF_MARGIN = 24
+# 字幕最多可以拖到距离屏幕边缘这么近，保证还剩一部分可见、能继续抓住
+MIN_VISIBLE_WIDTH = 120
+MIN_VISIBLE_HEIGHT = 48
 
 BASE_CSS = """
 window { background: transparent; }
@@ -154,6 +155,8 @@ class ScreenLayer:
         self.gesture.connect("drag-begin", self.on_drag_begin)
         self.gesture.connect("drag-update", self.on_drag_update)
         self.gesture.connect("drag-end", self.on_drag_end)
+        # 手势被合成器取消时也要复位，否则 dragging 卡住会让输入区域一直不更新
+        self.gesture.connect("cancel", self.on_drag_cancel)
 
         self.window.connect("size-allocate", lambda *_: self.overlay.update_input_regions())
         self.window.connect("destroy", Gtk.main_quit)
@@ -163,11 +166,6 @@ class ScreenLayer:
     def geometry(self):
         geo = self.monitor.get_geometry()
         return geo.x, geo.y, geo.width, geo.height
-
-    def size(self):
-        allocation = self.window.get_allocation()
-        _x, _y, width, height = self.geometry()
-        return allocation.width or width or 1920, allocation.height or height or 1080
 
     def set_text(self, current, secondary):
         self.current_label.set_text(current)
@@ -190,7 +188,11 @@ class ScreenLayer:
         self.overlay.drag_by(offset_x, offset_y)
 
     def on_drag_end(self, _gesture, _offset_x, _offset_y):
-        # 切屏时手势被主动取消，drag_layer 已清空，这里不再处理
+        if self.overlay.drag_layer is not self:
+            return
+        self.overlay.end_drag()
+
+    def on_drag_cancel(self, _gesture, _sequence):
         if self.overlay.drag_layer is not self:
             return
         self.overlay.end_drag()
@@ -205,7 +207,7 @@ class Overlay:
         self.text_secondary = ""
         self.pos_x = int(self.config["x"])
         self.pos_y = int(self.config["y"])
-        self.drag_start = None
+        self.drag_origin = None
         self.dragging = False
         self.drag_layer = None
 
@@ -223,6 +225,8 @@ class Overlay:
 
         saved = int(self.config.get("monitor", 0))
         self.layer = self.layers[saved] if 0 <= saved < len(self.layers) else self.layers[0]
+        # 显示器数量或排列变了时，旧坐标可能落在屏幕外
+        self.pos_x, self.pos_y = self.clamp_to_layer(self.layer, self.pos_x, self.pos_y)
         self.layer.place(self.pos_x, self.pos_y)
         self.apply_visibility()
 
@@ -233,6 +237,10 @@ class Overlay:
     # ---------- 输入区域 ----------
 
     def update_input_regions(self):
+        # 拖动中改输入区域会让合成器结束隐式抓取，跨屏后手势就断了
+        # （清空旧屏文字触发的 size-allocate 也会走到这里）；松手后 end_drag 再统一更新
+        if self.dragging:
+            return False
         # 建层期间 size-allocate 就会触发，此时层列表还没就绪
         if not getattr(self, "layers", None) or not getattr(self, "layer", None):
             return False
@@ -253,12 +261,13 @@ class Overlay:
         return False
 
     def apply_visibility(self):
-        """字幕只有一份：当前屏幕显示文字，其余屏幕清空并隐藏。"""
+        """字幕只有一份：当前屏幕显示文字，其余屏幕清空。
+
+        控件本身始终可见（空标签不占空间）；拖动中切换可见性会打断手势。"""
         if not getattr(self, "layers", None) or not getattr(self, "layer", None):
             return
         for layer in self.layers:
             active = layer is self.layer
-            layer.event_box.set_visible(active)
             layer.set_text(self.text_current if active else "", self.text_secondary if active else "")
             if active:
                 layer.place(self.pos_x, self.pos_y)
@@ -266,101 +275,75 @@ class Overlay:
     # ---------- 拖动 ----------
 
     def begin_drag(self, layer):
-        self.drag_start = (self.pos_x, self.pos_y)
+        origin_x, origin_y, _w, _h = self.layer.geometry()
+        self.drag_origin = (origin_x + self.pos_x, origin_y + self.pos_y)
         self.dragging = True
         self.drag_layer = layer
 
     def drag_by(self, offset_x, offset_y):
-        if not self.dragging or self.drag_start is None:
+        if not self.dragging or self.drag_origin is None:
             return
-        start_x, start_y = self.drag_start
-        self.move_to(start_x + int(offset_x), start_y + int(offset_y))
+        # 手势偏移量是相对按下点的全局位移；按住拖动时即使指针跨到别的显示器，
+        # 合成器仍会把越界的坐标发给发起手势的那块窗口，所以可以直接连续跨屏
+        global_x = self.drag_origin[0] + int(offset_x)
+        global_y = self.drag_origin[1] + int(offset_y)
+        self.move_global(global_x, global_y)
 
     def end_drag(self):
         if not self.dragging:
             return
         self.dragging = False
         self.drag_layer = None
-        self.drag_start = None
+        self.drag_origin = None
         self.config["x"] = self.pos_x
         self.config["y"] = self.pos_y
         self.config["monitor"] = self.layer.index
         save_config(self.config)
         self.update_input_regions()
 
-    def move_to(self, x, y):
-        while True:
-            width, height = self.layer.size()
-            max_x = max(0, width - 120)
-            max_y = max(0, height - 48)
-            target = self.neighbor_towards(x, y, width, height)
-            if target is None:
-                self.pos_x = max(0, min(int(x), max_x))
-                self.pos_y = max(0, min(int(y), max_y))
-                break
-            x, y = self.handoff(target, x, y, width, height)
-        self.layer.place(self.pos_x, self.pos_y)
-        if not self.dragging:
-            self.update_input_regions()
+    def clamp_to_layer(self, layer, x, y):
+        _ox, _oy, width, height = layer.geometry()
+        max_x = max(0, width - MIN_VISIBLE_WIDTH)
+        max_y = max(0, height - MIN_VISIBLE_HEIGHT)
+        return max(0, min(int(x), max_x)), max(0, min(int(y), max_y))
 
-    def handoff(self, target, x, y, width, height):
-        """切到相邻屏幕，字幕贴着被拖出去的那条边进入。
-
-        手势的偏移量跟发起它的那块屏幕绑定，换屏幕后继续用会把字幕拽回去，
-        所以这里结束本次拖动：松开后在新屏幕上重新按住即可继续。"""
-        origin_x, origin_y, _w, _h = self.layer.geometry()
-        target_x, target_y, target_w, target_h = target.geometry()
-        # 沿被拖出的轴贴边进入，另一轴按全局坐标对齐，这样上下/左右排列的屏幕都自然
-        if x < 0:
-            new_x = target_w - HANDOFF_MARGIN
-        elif x > width:
-            new_x = HANDOFF_MARGIN
-        else:
-            new_x = (origin_x + x) - target_x
-        if y < 0:
-            new_y = target_h - HANDOFF_MARGIN
-        elif y > height:
-            new_y = HANDOFF_MARGIN
-        else:
-            new_y = (origin_y + y) - target_y
-        previous = self.layer
-        self.layer = target
-        previous.event_box.set_visible(False)
-        previous.set_text("", "")
-        # 字幕只有一份，切屏后立刻放到新屏幕上，旧屏幕那份已经清空
-        target.event_box.set_visible(True)
-        target.set_text(self.text_current, self.text_secondary)
-        self.dragging = False
-        self.drag_start = None
-        # 取消旧手势，否则松手时它还会再报一次 drag-end
-        if self.drag_layer is not None:
-            self.drag_layer.gesture.set_state(Gtk.EventSequenceState.DENIED)
-            self.drag_layer = None
-        self.update_input_regions()
-        return new_x, new_y
-
-    def neighbor_towards(self, x, y, width, height):
-        """拖动目标越出本屏幕哪条边，就返回该方向上最近的一块屏幕。"""
-        dx = -1 if x < 0 else (1 if x > width else 0)
-        dy = -1 if y < 0 else (1 if y > height else 0)
-        if dx == 0 and dy == 0:
-            return None
-        origin_x, origin_y, _w, _h = self.layer.geometry()
+    def layer_at(self, global_x, global_y):
+        """返回全局坐标所在的显示器；落在屏幕之间的空隙时取最近的一块。"""
         best = None
         best_distance = None
         for layer in self.layers:
-            if layer is self.layer:
-                continue
-            other_x, other_y, _ow, _oh = layer.geometry()
-            if dx and (other_x - origin_x) * dx <= 0:
-                continue
-            if dy and (other_y - origin_y) * dy <= 0:
-                continue
-            distance = abs(other_x - origin_x) + abs(other_y - origin_y)
+            x, y, width, height = layer.geometry()
+            dx = 0 if x <= global_x <= x + width else min(
+                abs(global_x - x), abs(global_x - (x + width))
+            )
+            dy = 0 if y <= global_y <= y + height else min(
+                abs(global_y - y), abs(global_y - (y + height))
+            )
+            distance = dx * dx + dy * dy
+            if distance == 0:
+                return layer
             if best_distance is None or distance < best_distance:
                 best = layer
                 best_distance = distance
-        return best
+        return best or self.layer
+
+    def move_global(self, global_x, global_y):
+        target = self.layer_at(global_x, global_y)
+        target_x, target_y, _w, _h = target.geometry()
+        x, y = self.clamp_to_layer(target, global_x - target_x, global_y - target_y)
+        if target is not self.layer:
+            previous = self.layer
+            self.layer = target
+            # 只换文字，不动控件可见性：拖动中隐藏发起手势那块窗口的子控件会让
+            # GTK 结束这次手势，跨屏后指针位移就收不到了
+            previous.set_text("", "")
+            target.set_text(self.text_current, self.text_secondary)
+        self.pos_x, self.pos_y = x, y
+        target.place(x, y)
+        # 拖动中不要改输入区域：清空发起手势那块窗口的 input region 会让合成器
+        # 结束隐式抓取，跨屏后手势就收不到后续位移了。松手时 end_drag 再统一更新。
+        if not self.dragging:
+            self.update_input_regions()
 
     # ---------- 样式 ----------
 
