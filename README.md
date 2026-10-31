@@ -32,6 +32,8 @@ pnpm exec electron-builder --linux AppImage deb   # AppImage + deb
 makepkg -D build/arch -f --noconfirm              # Arch 包
 ```
 
+构建产物按版本归档在 `release/<version>/`（例如 `release/1.8.1/`），`release/linux-unpacked/` 是打包中间产物。
+
 发版流程与自检清单见 [`CLAUDE.md`](./CLAUDE.md)。
 
 打包后安装（用户级，无需 sudo）：
@@ -41,7 +43,7 @@ makepkg -D build/arch -f --noconfirm              # Arch 包
 betterncm          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/BetterNCM-1.8.1-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/1.8.1/BetterNCM-1.8.1-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
 ./BetterNCM-1.8.1-x86_64.AppImage --appimage-extract-and-run

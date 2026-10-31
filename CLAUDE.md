@@ -42,10 +42,10 @@
 ## 五、发布（四类资产全部齐全）
 
 19. 桌面 AppImage：`pnpm exec electron-builder --linux AppImage deb`
-20. Debian 包：同上产出 `release/BetterNCM-x.y.z-amd64.deb`
-21. Arch 包：`makepkg -D build/arch -f --noconfirm`，产出 `betterncm-x.y.z-1-x86_64.pkg.tar.zst`，复制到 `release/`
-22. Android：`pnpm mobile:apk`，复制 `app-release.apk` 为 `release/BetterNCM-x.y.z-android.apk`
-23. 用 `gh release create/upload` 上传**全部四类资产**（`--clobber` 覆盖重传）。
+20. Debian 包：同上产出 `release/BetterNCM-x.y.z-amd64.deb`，构建完成后按第八节归档到 `release/<version>/`
+21. Arch 包：`makepkg -D build/arch -f --noconfirm`，产出 `betterncm-x.y.z-1-x86_64.pkg.tar.zst`，复制到 `release/<version>/`
+22. Android：`pnpm mobile:apk`，复制 `app-release.apk` 为 `release/<version>/BetterNCM-x.y.z-android.apk`
+23. 用 `gh release create/upload` 从 `release/<version>/` 上传**全部四类资产**（`--clobber` 覆盖重传）。
 24. 上传后必须核对：`gh release view <tag> --json author,assets`
     - `author.login` 必须是 `001yyds`
     - 资产数量与文件名齐全，体积与本地文件一致
@@ -70,6 +70,21 @@
 
 ---
 
+## 八、Release 目录归档（强制）
+
+34. 每次构建出新版本后**立即**按版本号归档，不要散落在 `release/` 根目录（未发布的小版本也一样）：
+    - 目录名与 `package.json` 的 `version` 完全一致，例如 `release/1.8.1/`
+    - AppImage、deb、Arch 包、APK 全部移入该目录，文件名保持构建产物原名，不改名
+    - 归档完成后再执行 `gh release create/upload`，上传路径写 `release/<version>/...`
+35. `release/` 根目录只保留构建中间产物与元数据，不得移入版本目录：
+    - `release/linux-unpacked/`：PKGBUILD 的打包来源，移走后 Arch 包会构建失败
+    - `builder-debug.yml`、`builder-effective-config.yaml`、`latest-linux.yml`：electron-builder 自动生成
+36. 归档后核对 `release/<version>/` 下四类资产齐全；历史版本缺哪类就补构建，不得用别的版本顶替。
+37. README 中的本地产物路径写成 `release/<version>/文件名`，版本号与本次发布一致。
+38. `release/` 已在 `.gitignore` 中，归档只影响本地，禁止把安装包提交进仓库。
+
+---
+
 ## 常用命令
 
 ```bash
@@ -90,8 +105,12 @@ makepkg -D build/arch -f --noconfirm
 # 调试（Electron 开 CDP）
 pnpm exec electron . --remote-debugging-port=9222 --no-sandbox
 
-# 发布
-gh release create vX.Y.Z release/* --title "BetterNCM X.Y.Z" --notes-file /tmp/notes.md
+# 构建后按版本归档（AppImage / deb / Arch 包 / APK）
+mkdir -p release/X.Y.Z
+mv release/BetterNCM-X.Y.Z-* release/betterncm-X.Y.Z-* release/X.Y.Z/
+
+# 发布（从归档目录取资产）
+gh release create vX.Y.Z release/X.Y.Z/* --title "BetterNCM X.Y.Z" --notes-file /tmp/notes.md
 gh release view vX.Y.Z --json author,assets
 ```
 
