@@ -729,7 +729,12 @@ function defaults(): Settings {
     lyricFontSize: 22,
     desktopLyrics: false,
     desktopLyricsLocked: false,
-    desktopLyricsFontSize: 30
+    desktopLyricsFontSize: 30,
+    desktopLyricsColor: '#ffffff',
+    desktopLyricsOutline: true,
+    desktopLyricsBackground: true,
+    desktopLyricsBackgroundColor: '#18181c',
+    desktopLyricsBackgroundOpacity: 42
   }
 }
 

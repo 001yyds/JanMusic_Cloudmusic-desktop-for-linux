@@ -3,6 +3,7 @@ import { appendFileSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { app } from 'electron'
+import type { DesktopLyricTheme } from '../shared/types'
 
 export interface DesktopLyricState {
   current: string
@@ -17,6 +18,7 @@ let child: ChildProcess | null = null
 let starting = false
 let stopping = false
 let unavailable = false
+let currentTheme: DesktopLyricTheme | null = null
 
 function log(message: string): void {
   try {
@@ -77,6 +79,8 @@ export function startDesktopLyrics(): boolean {
     child = proc
     starting = false
     log(`started: ${scriptPath()}`)
+    // 覆盖层比渲染层先就绪时，把最近一次外观参数补发给它
+    if (currentTheme) sendTheme(currentTheme)
     return true
   } catch (error) {
     log(`failed: ${error instanceof Error ? error.message : String(error)}`)
@@ -112,6 +116,25 @@ export function setDesktopLyricsLocked(locked: boolean): void {
 export function setDesktopLyricsFont(size: number): void {
   if (!child && !startDesktopLyrics()) return
   send({ cmd: 'theme', font: size })
+}
+
+function sendTheme(theme: DesktopLyricTheme): void {
+  send({
+    cmd: 'theme',
+    font: theme.font,
+    color: theme.color,
+    outline: theme.outline,
+    background: theme.background,
+    background_color: theme.backgroundColor,
+    background_opacity: theme.backgroundOpacity
+  })
+}
+
+/** 外观参数：记住最新值；覆盖层未运行时只缓存，不因为它而启动 */
+export function setDesktopLyricsTheme(theme: DesktopLyricTheme): void {
+  currentTheme = theme
+  if (!child) return
+  sendTheme(theme)
 }
 
 export function stopDesktopLyrics(): void {

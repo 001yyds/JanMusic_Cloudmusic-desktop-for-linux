@@ -24,6 +24,7 @@ Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定�
 import json
 import math
 import os
+import re
 import signal
 import sys
 import threading
@@ -41,38 +42,98 @@ CONFIG_DIR = os.path.join(
 )
 CONFIG_PATH = os.path.join(CONFIG_DIR, "desktop-lyrics.json")
 
-DEFAULT_CONFIG = {"x": 160, "y": 640, "monitor": 0, "locked": False, "font": 30}
+DEFAULT_CONFIG = {
+    "x": 160,
+    "y": 640,
+    "monitor": 0,
+    "locked": False,
+    "font": 30,
+    "color": "#ffffff",
+    "outline": True,
+    "background": True,
+    "background_color": "#18181c",
+    "background_opacity": 42,
+}
 
 # 字幕最多可以拖到距离屏幕边缘这么近，保证还剩一部分可见、能继续抓住
 MIN_VISIBLE_WIDTH = 120
 MIN_VISIBLE_HEIGHT = 48
-# 解锁时字幕外面的灰色框与左侧圆形拖动手柄
+# 字幕外面的框与左侧圆形拖动手柄
 FRAME_PAD = 12
 FRAME_RADIUS = 16
 HANDLE_SIZE = 40
 HANDLE_HIT = 48
 
-BASE_CSS = """
-window { background: transparent; }
-#lyric {
-  color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45);
-}
-#secondary {
-  color: rgba(255,255,255,0.8);
-  text-shadow: 0 1px 5px rgba(0,0,0,0.5);
-}
-"""
+BASE_CSS = "window { background: transparent; }\n"
+
+HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
-def build_css(size):
-    size = int(size)
+def normalize_hex(value, fallback):
+    return value.lower() if isinstance(value, str) and HEX_COLOR.match(value) else fallback
+
+
+def hex_to_rgb(value, fallback=(24, 24, 28)):
+    if isinstance(value, str) and HEX_COLOR.match(value):
+        return int(value[1:3], 16), int(value[3:5], 16), int(value[5:7], 16)
+    return fallback
+
+
+def rgba_css(value, alpha):
+    r, g, b = hex_to_rgb(value)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def outline_shadow(enabled):
+    if not enabled:
+        return "none"
+    # 八个方向的 1.5px 阴影模拟描边，再叠一层柔和投影
+    parts = [
+        f"{dx}px {dy}px 0 rgba(0,0,0,0.82)"
+        for dx, dy in (
+            (-1.5, 0),
+            (1.5, 0),
+            (0, -1.5),
+            (0, 1.5),
+            (-1.5, -1.5),
+            (1.5, -1.5),
+            (-1.5, 1.5),
+            (1.5, 1.5),
+        )
+    ]
+    parts.append("0 2px 8px rgba(0,0,0,0.5)")
+    return ", ".join(parts)
+
+
+def build_css(config):
+    size = int(config.get("font", 30))
     secondary = max(12, int(size * 0.62))
+    color = normalize_hex(config.get("color"), "#ffffff")
+    shadow = outline_shadow(config.get("outline", True))
     return (
         BASE_CSS
-        + f"#lyric {{ font-size: {size}px; font-weight: 600; }}\n"
-        + f"#secondary {{ font-size: {secondary}px; }}\n"
+        + f"#lyric {{ font-size: {size}px; font-weight: 600; color: {color};"
+        + f" text-shadow: {shadow}; }}\n"
+        + f"#secondary {{ font-size: {secondary}px; color: {rgba_css(color, 0.8)};"
+        + f" text-shadow: {shadow}; }}\n"
     )
+
+
+def normalize_config(config):
+    try:
+        config["font"] = min(96, max(10, int(config.get("font", 30))))
+    except (TypeError, ValueError):
+        config["font"] = 30
+    config["color"] = normalize_hex(config.get("color"), "#ffffff")
+    config["outline"] = bool(config.get("outline", True))
+    config["background"] = bool(config.get("background", True))
+    config["background_color"] = normalize_hex(config.get("background_color"), "#18181c")
+    try:
+        config["background_opacity"] = min(100, max(0, int(config.get("background_opacity", 42))))
+    except (TypeError, ValueError):
+        config["background_opacity"] = 42
+    config["locked"] = bool(config.get("locked", False))
+    return config
 
 
 def load_config():
@@ -85,7 +146,7 @@ def load_config():
                 config[key] = stored[key]
     except Exception:
         pass
-    return config
+    return normalize_config(config)
 
 
 def save_config(config):
@@ -142,8 +203,9 @@ class ScreenLayer:
         self.window.add(self.fixed)
 
         self.frame_visible = False
+        self.handle_visible = False
 
-        # 灰色框用 DrawingArea 自己画：无子窗口的 Gtk.EventBox/Gtk.Box 不会绘制 CSS 背景
+        # 背景框用 DrawingArea 自己画：无子窗口的 Gtk.EventBox/Gtk.Box 不会绘制 CSS 背景
         self.frame = Gtk.DrawingArea()
         self.frame.connect("draw", self.draw_frame)
         self.fixed.put(self.frame, 0, 0)
@@ -151,7 +213,7 @@ class ScreenLayer:
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self.fixed.put(self.box, 0, 0)
 
-        # 中心圆形拖动手柄：只有它可以发起拖动
+        # 左侧圆形拖动手柄：只有它可以发起拖动
         self.handle = Gtk.DrawingArea()
         self.handle.set_size_request(HANDLE_SIZE, HANDLE_SIZE)
         self.handle.connect("draw", self.draw_handle)
@@ -204,6 +266,12 @@ class ScreenLayer:
             return
         self.frame_visible = visible
         self.frame.queue_draw()
+
+    def set_handle_visible(self, visible):
+        visible = bool(visible)
+        if visible == self.handle_visible:
+            return
+        self.handle_visible = visible
         self.handle.queue_draw()
 
     def draw_frame(self, widget, cr):
@@ -213,8 +281,21 @@ class ScreenLayer:
         width, height = allocation.width, allocation.height
         if width <= 0 or height <= 0:
             return False
+        config = self.overlay.config
+        background = bool(config.get("background", True))
+        if not background:
+            # 背景关闭时只在未锁定状态画一圈淡边框，提示这里可以拖
+            if self.overlay.locked:
+                return False
+            self.rounded_rect(cr, 0.5, 0.5, width - 1, height - 1, FRAME_RADIUS)
+            cr.set_source_rgba(1.0, 1.0, 1.0, 0.18)
+            cr.set_line_width(1)
+            cr.stroke()
+            return False
+        r, g, b = hex_to_rgb(config.get("background_color"), (24, 24, 28))
+        opacity = min(100, max(0, int(config.get("background_opacity", 42)))) / 100
         self.rounded_rect(cr, 0.5, 0.5, width - 1, height - 1, FRAME_RADIUS)
-        cr.set_source_rgba(24 / 255, 24 / 255, 28 / 255, 0.42)
+        cr.set_source_rgba(r / 255, g / 255, b / 255, opacity)
         cr.fill_preserve()
         cr.set_source_rgba(1.0, 1.0, 1.0, 0.20)
         cr.set_line_width(1)
@@ -222,7 +303,7 @@ class ScreenLayer:
         return False
 
     def draw_handle(self, widget, cr):
-        if not self.frame_visible:
+        if not self.handle_visible:
             return False
         allocation = widget.get_allocation()
         radius = max(1.0, min(allocation.width, allocation.height) / 2 - 1)
@@ -317,7 +398,7 @@ class Overlay:
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
-        self.apply_font()
+        self.apply_theme()
 
         display = Gdk.Display.get_default()
         count = display.get_n_monitors() if display is not None else 0
@@ -367,14 +448,17 @@ class Overlay:
     def apply_visibility(self):
         """字幕只有一份：当前屏幕显示文字，其余屏幕清空。
 
-        解锁时给当前屏幕加灰色框和中心拖动手柄；锁定后只留文字、整层点击穿透。"""
+        背景按设置常驻；解锁时额外显示左侧拖动手柄，锁定后整层点击穿透。"""
         if not getattr(self, "layers", None) or not getattr(self, "layer", None):
             return
-        show_frame = not self.locked and self.has_text()
+        background = bool(self.config.get("background", True))
+        show_frame = self.has_text() and (background or not self.locked)
+        show_handle = self.has_text() and not self.locked
         for layer in self.layers:
             active = layer is self.layer
             layer.set_text(self.text_current if active else "", self.text_secondary if active else "")
             layer.set_frame_visible(active and show_frame)
+            layer.set_handle_visible(active and show_handle)
             if active:
                 layer.place(self.pos_x, self.pos_y)
 
@@ -464,8 +548,11 @@ class Overlay:
             # GTK 结束这次手势，跨屏后指针位移就收不到了。先画新屏再清旧屏，减少闪烁。
             target.set_text(self.text_current, self.text_secondary)
             previous.set_text("", "")
-            target.set_frame_visible(not self.locked and self.has_text())
+            background = bool(self.config.get("background", True))
+            target.set_frame_visible(self.has_text() and (background or not self.locked))
+            target.set_handle_visible(self.has_text() and not self.locked)
             previous.set_frame_visible(False)
+            previous.set_handle_visible(False)
         self.pos_x, self.pos_y = local_x, local_y
         target.place(local_x, local_y)
         # 拖动中不要改输入区域：清空发起手势那块窗口的 input region 会让合成器
@@ -475,9 +562,8 @@ class Overlay:
 
     # ---------- 样式 ----------
 
-    def apply_font(self):
-        size = int(self.config.get("font", 30))
-        css = build_css(size) + font_family_css()
+    def apply_theme(self):
+        css = build_css(self.config) + font_family_css()
         self.provider.load_from_data(css.encode("utf-8"))
 
     # ---------- 命令 ----------
@@ -493,11 +579,39 @@ class Overlay:
             self.apply_visibility()
             GLib.idle_add(self.update_input_regions)
         elif cmd == "theme":
+            changed = False
             if "font" in payload:
-                self.config["font"] = int(payload["font"])
-                self.apply_font()
+                try:
+                    self.config["font"] = min(96, max(10, int(payload["font"])))
+                except (TypeError, ValueError):
+                    pass
+                changed = True
+            if "color" in payload:
+                self.config["color"] = normalize_hex(payload["color"], "#ffffff")
+                changed = True
+            if "outline" in payload:
+                self.config["outline"] = bool(payload["outline"])
+                changed = True
+            if "background" in payload:
+                self.config["background"] = bool(payload["background"])
+                changed = True
+            if "background_color" in payload:
+                self.config["background_color"] = normalize_hex(
+                    payload["background_color"], "#18181c"
+                )
+                changed = True
+            if "background_opacity" in payload:
+                try:
+                    self.config["background_opacity"] = min(
+                        100, max(0, int(payload["background_opacity"]))
+                    )
+                except (TypeError, ValueError):
+                    pass
+                changed = True
+            if changed:
                 save_config(self.config)
-                # 字号变了，手柄的圆心也要跟着重新定位
+                self.apply_theme()
+                # 字号/背景变化会影响手柄位置与边框显示
                 self.apply_visibility()
                 GLib.idle_add(self.update_input_regions)
         elif cmd == "lock":

@@ -80,6 +80,21 @@ export interface Settings {
   desktopLyrics: boolean
   desktopLyricsLocked: boolean
   desktopLyricsFontSize: number
+  desktopLyricsColor: string
+  desktopLyricsOutline: boolean
+  desktopLyricsBackground: boolean
+  desktopLyricsBackgroundColor: string
+  desktopLyricsBackgroundOpacity: number
+}
+
+/** 桌面歌词外观参数（主进程转发给 Python 覆盖层） */
+export interface DesktopLyricTheme {
+  font: number
+  color: string
+  outline: boolean
+  background: boolean
+  backgroundColor: string
+  backgroundOpacity: number
 }
 
 export interface SongUrlResult {

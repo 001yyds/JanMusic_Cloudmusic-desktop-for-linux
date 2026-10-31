@@ -12,6 +12,15 @@ export function useDesktopLyrics(): void {
   const enabled = useSettingsStore((state) => state.settings?.desktopLyrics ?? false)
   const locked = useSettingsStore((state) => state.settings?.desktopLyricsLocked ?? false)
   const fontSize = useSettingsStore((state) => state.settings?.desktopLyricsFontSize ?? 30)
+  const color = useSettingsStore((state) => state.settings?.desktopLyricsColor ?? '#ffffff')
+  const outline = useSettingsStore((state) => state.settings?.desktopLyricsOutline ?? true)
+  const background = useSettingsStore((state) => state.settings?.desktopLyricsBackground ?? true)
+  const backgroundColor = useSettingsStore(
+    (state) => state.settings?.desktopLyricsBackgroundColor ?? '#18181c'
+  )
+  const backgroundOpacity = useSettingsStore(
+    (state) => state.settings?.desktopLyricsBackgroundOpacity ?? 42
+  )
 
   const current = usePlayerStore((state) => state.current)
   const playing = usePlayerStore((state) => state.playing)
@@ -46,12 +55,21 @@ export function useDesktopLyrics(): void {
   }, [enabled])
 
   useEffect(() => {
+    if (!enabled) return
     void api.lyrics?.setLocked(locked)
-  }, [locked])
+  }, [enabled, locked])
 
   useEffect(() => {
-    void api.lyrics?.setFont(fontSize)
-  }, [fontSize])
+    if (!enabled) return
+    void api.lyrics?.setTheme?.({
+      font: fontSize,
+      color,
+      outline,
+      background,
+      backgroundColor,
+      backgroundOpacity
+    })
+  }, [enabled, fontSize, color, outline, background, backgroundColor, backgroundOpacity])
 
   useEffect(() => {
     if (!enabled) return

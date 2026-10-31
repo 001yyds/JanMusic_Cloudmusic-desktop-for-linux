@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   Check,
+  ChevronRight,
   Download,
   FolderOpen,
   HardDrive,
@@ -28,6 +29,7 @@ import { usePlayerStore } from '../store/player'
 import { useSettingsStore } from '../store/settings'
 import { useUiStore } from '../store/ui'
 import { Slider } from '../components/Slider'
+import { DesktopLyricsPanel } from '../components/DesktopLyricsPanel'
 
 const QUALITIES: { value: Quality; label: string }[] = [
   { value: 'standard', label: '标准' },
@@ -117,7 +119,7 @@ export function SettingsPage(): React.JSX.Element {
   const desktopLyricsLocked = settings?.desktopLyricsLocked ?? false
 
   const [lyricSize, setLyricSize] = useState(22)
-  const [desktopLyricsFont, setDesktopLyricsFont] = useState(30)
+  const [desktopPanelOpen, setDesktopPanelOpen] = useState(false)
   const [cache, setCache] = useState({ audio: 0, images: 0 })
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [clearing, setClearing] = useState(false)
@@ -134,10 +136,6 @@ export function SettingsPage(): React.JSX.Element {
   useEffect(() => {
     setLyricSize(settings?.lyricFontSize ?? 22)
   }, [settings?.lyricFontSize])
-
-  useEffect(() => {
-    setDesktopLyricsFont(settings?.desktopLyricsFontSize ?? 30)
-  }, [settings?.desktopLyricsFontSize])
 
   const downloads = settings?.downloads ?? []
   const downloadSize = downloads.reduce((sum, item) => sum + item.size, 0)
@@ -290,58 +288,26 @@ export function SettingsPage(): React.JSX.Element {
           </div>
 
           {!isMobile() && (
-            <Row
-              icon={Monitor}
-              title="桌面歌词"
-              hint={
-                desktopLyrics
-                  ? desktopLyricsLocked
-                    ? '已显示 · 已锁定（点击穿透）'
-                    : '已显示 · 拖动字幕左侧圆点'
-                  : '在桌面上显示同步歌词'
-              }
+            <button
+              type="button"
+              onClick={() => setDesktopPanelOpen(true)}
+              className="flex w-full items-center gap-3 rounded-[14px] px-1 py-3.5 text-left transition-colors duration-200 hover:bg-white/15"
             >
-              <ActionButton
-                onClick={() =>
-                  void useSettingsStore
-                    .getState()
-                    .patch({ desktopLyrics: !desktopLyrics })
-                }
-              >
-                {desktopLyrics ? '关闭' : '开启'}
-              </ActionButton>
-              {desktopLyrics && (
-                <ActionButton
-                  onClick={() =>
-                    void useSettingsStore
-                      .getState()
-                      .patch({ desktopLyricsLocked: !desktopLyricsLocked })
-                  }
-                >
-                  {desktopLyricsLocked ? '解锁' : '锁定'}
-                </ActionButton>
-              )}
-            </Row>
-          )}
-
-          {!isMobile() && desktopLyrics && (
-            <Row icon={Type} title="桌面歌词字号" hint={`${desktopLyricsFont}px`}>
-              <Slider
-                value={desktopLyricsFont - 16}
-                max={44}
-                onChange={(value) => {
-                  const size = 16 + Math.round(value)
-                  setDesktopLyricsFont(size)
-                  void window.ncm.lyrics?.setFont(size)
-                }}
-                onCommit={(value) =>
-                  void useSettingsStore
-                    .getState()
-                    .patch({ desktopLyricsFontSize: 16 + Math.round(value) })
-                }
-                className="w-[120px] sm:w-[170px]"
-              />
-            </Row>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border border-white/40 bg-white/20 text-black/45">
+                <Monitor size={15} strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12.5px] text-black/80">桌面歌词</div>
+                <div className="mt-0.5 truncate text-[10.5px] text-black/40">
+                  {desktopLyrics
+                    ? desktopLyricsLocked
+                      ? '已显示 · 已锁定（点击穿透）'
+                      : '已显示 · 拖动字幕左侧圆点'
+                    : '在桌面上显示同步歌词'}
+                </div>
+              </div>
+              <ChevronRight size={15} className="shrink-0 text-black/30" />
+            </button>
           )}
         </Section>
 
@@ -404,6 +370,8 @@ export function SettingsPage(): React.JSX.Element {
           </div>
         </Section>
       </div>
+
+      <DesktopLyricsPanel open={desktopPanelOpen} onClose={() => setDesktopPanelOpen(false)} />
     </div>
   )
 }

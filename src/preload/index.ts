@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type {
   AppInfo,
   Comment,
+  DesktopLyricTheme,
   MediaWarmPayload,
   Quality,
   Settings,
@@ -83,7 +84,8 @@ const api = {
       ipcRenderer.send('lyrics:update', state),
     setVisible: (visible: boolean) => invoke<boolean>('lyrics:visible', visible),
     setLocked: (locked: boolean) => invoke<boolean>('lyrics:lock', locked),
-    setFont: (size: number) => invoke<boolean>('lyrics:font', size)
+    setFont: (size: number) => invoke<boolean>('lyrics:font', size),
+    setTheme: (theme: DesktopLyricTheme) => invoke<boolean>('lyrics:theme', theme)
   },
   win: {
     minimize: () => void ipcRenderer.invoke('win:minimize'),

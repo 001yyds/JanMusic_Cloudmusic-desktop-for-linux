@@ -4,6 +4,7 @@ import type {
   CommentFloorPage,
   CommentPage,
   CommentSort,
+  DesktopLyricTheme,
   DownloadRecord,
   LyricResult,
   MediaWarmPayload,
@@ -54,6 +55,7 @@ export interface NcmApi {
     setVisible(visible: boolean): Promise<boolean>
     setLocked(locked: boolean): Promise<boolean>
     setFont(size: number): Promise<boolean>
+    setTheme(theme: DesktopLyricTheme): Promise<boolean>
   }
   user: {
     playlists(uid: number): Promise<Playlist[]>

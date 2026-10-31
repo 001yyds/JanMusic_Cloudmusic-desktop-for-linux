@@ -7,6 +7,7 @@ import type { DownloadRecord, MediaWarmPayload, Quality, Settings, Song } from '
 import {
   setDesktopLyricsFont,
   setDesktopLyricsLocked,
+  setDesktopLyricsTheme,
   setDesktopLyricsVisible,
   updateDesktopLyrics
 } from './desktopLyrics'
@@ -260,6 +261,25 @@ export function registerIpc(): void {
         ? Math.min(96, Math.max(10, Math.round(size)))
         : 30
     setDesktopLyricsFont(value)
+    return true
+  })
+  ipcMain.handle('lyrics:theme', (event, theme: unknown) => {
+    if (!fromMainFrame(event)) return false
+    const payload = theme && typeof theme === 'object' ? (theme as Record<string, unknown>) : {}
+    const hex = (value: unknown, fallback: string): string =>
+      typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback
+    const bounded = (value: unknown, fallback: number, min: number, max: number): number =>
+      typeof value === 'number' && Number.isFinite(value)
+        ? Math.min(max, Math.max(min, Math.round(value)))
+        : fallback
+    setDesktopLyricsTheme({
+      font: bounded(payload.font, 30, 10, 96),
+      color: hex(payload.color, '#ffffff'),
+      outline: payload.outline !== false,
+      background: payload.background !== false,
+      backgroundColor: hex(payload.backgroundColor, '#18181c'),
+      backgroundOpacity: bounded(payload.backgroundOpacity, 42, 0, 100)
+    })
     return true
   })
 }
