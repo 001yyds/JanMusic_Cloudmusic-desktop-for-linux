@@ -41,10 +41,10 @@ makepkg -D build/arch -f --noconfirm              # Arch 包
 betterncm          # 或从应用菜单启动
 ```
 
-也可以直接运行 `release/BetterNCM-1.8.0-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
+也可以直接运行 `release/BetterNCM-1.8.1-x86_64.AppImage`。Arch 上如果提示缺少 FUSE，可安装 `fuse2`，或：
 
 ```bash
-./BetterNCM-1.8.0-x86_64.AppImage --appimage-extract-and-run
+./BetterNCM-1.8.1-x86_64.AppImage --appimage-extract-and-run
 ```
 
 桌面歌词依赖系统的 GTK3 与 layer-shell（Arch：`sudo pacman -S gtk3 python-gobject gtk-layer-shell`）。
@@ -53,15 +53,15 @@ betterncm          # 或从应用菜单启动
 
 | 发行版 | 文件 | 安装 |
 | --- | --- | --- |
-| Arch Linux | `betterncm-1.8.0-1-x86_64.pkg.tar.zst` | `sudo pacman -U betterncm-1.8.0-1-x86_64.pkg.tar.zst` |
-| Debian / Ubuntu | `BetterNCM-1.8.0-amd64.deb` | `sudo apt install ./BetterNCM-1.8.0-amd64.deb` |
-| 通用便携 | `BetterNCM-1.8.0-x86_64.AppImage` | `chmod +x` 后直接运行 |
+| Arch Linux | `betterncm-1.8.1-1-x86_64.pkg.tar.zst` | `sudo pacman -U betterncm-1.8.1-1-x86_64.pkg.tar.zst` |
+| Debian / Ubuntu | `BetterNCM-1.8.1-amd64.deb` | `sudo apt install ./BetterNCM-1.8.1-amd64.deb` |
+| 通用便携 | `BetterNCM-1.8.1-x86_64.AppImage` | `chmod +x` 后直接运行 |
 
 下载地址：[Releases](https://github.com/001yyds/Better_NCM_Linux/releases/latest)
 
 ## Android
 
-APK 下载：[BetterNCM-1.8.0-android.apk](https://github.com/001yyds/Better_NCM_Linux/releases/download/v1.8.0/BetterNCM-1.8.0-android.apk)
+APK 下载：[BetterNCM-1.8.1-android.apk](https://github.com/001yyds/Better_NCM_Linux/releases/download/v1.8.1/BetterNCM-1.8.1-android.apk)
 
 - 三种登录方式：扫码、手机号验证码、内嵌官方网页登录（可完成滑块验证）
 - 歌单、每日推荐、搜索、歌词、播放队列

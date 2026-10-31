@@ -45,6 +45,8 @@ DEFAULT_CONFIG = {"x": 160, "y": 640, "monitor": 0, "locked": False, "font": 30}
 # 字幕最多可以拖到距离屏幕边缘这么近，保证还剩一部分可见、能继续抓住
 MIN_VISIBLE_WIDTH = 120
 MIN_VISIBLE_HEIGHT = 48
+# 点击区域比文字稍大一点，免得没点准就拖不动
+HIT_PADDING = 6
 
 BASE_CSS = """
 window { background: transparent; }
@@ -172,14 +174,26 @@ class ScreenLayer:
         self.secondary_label.set_text(secondary)
         self.secondary_label.set_visible(bool(secondary))
 
+    def hit_size(self):
+        """字幕当前的绘制尺寸。
+
+        用首选尺寸而不是 allocation：文字刚换过时 allocation 还没重新布局，
+        据此设置输入区域会出现「刚拖完一会儿抓不住」的情况。"""
+        width = self.event_box.get_preferred_width()[1]
+        height = self.event_box.get_preferred_height()[1]
+        return max(width, 1), max(height, 1)
+
     def place(self, x, y):
         self.fixed.move(self.event_box, int(x), int(y))
 
     # ---------- 拖动 ----------
 
     def on_drag_begin(self, _gesture, _start_x, _start_y):
-        if self.overlay.locked or self.overlay.dragging:
+        if self.overlay.locked:
             return
+        if self.overlay.dragging:
+            # 上一次手势没收到结束信号时先复位，否则 dragging 会一直卡住
+            self.overlay.end_drag()
         self.overlay.begin_drag(self)
 
     def on_drag_update(self, _gesture, offset_x, offset_y):
@@ -251,10 +265,13 @@ class Overlay:
             if self.locked or layer is not self.layer:
                 region = cairo.Region()
             else:
-                allocation = layer.event_box.get_allocation()
+                width, height = layer.hit_size()
                 region = cairo.Region(
                     cairo.RectangleInt(
-                        self.pos_x, self.pos_y, max(allocation.width, 1), max(allocation.height, 1)
+                        self.pos_x - HIT_PADDING,
+                        self.pos_y - HIT_PADDING,
+                        width + HIT_PADDING * 2,
+                        height + HIT_PADDING * 2,
                     )
                 )
             gdk_window.input_shape_combine_region(region, 0, 0)
@@ -300,6 +317,8 @@ class Overlay:
         self.config["monitor"] = self.layer.index
         save_config(self.config)
         self.update_input_regions()
+        # 松手后 GTK 可能还会重排一次，补一次刷新，保证新屏上的文字立刻能抓住
+        GLib.idle_add(self.update_input_regions)
 
     def clamp_to_layer(self, layer, x, y):
         _ox, _oy, width, height = layer.geometry()
@@ -327,19 +346,37 @@ class Overlay:
                 best_distance = distance
         return best or self.layer
 
+    def layout_bounds(self):
+        left = min(layer.geometry()[0] for layer in self.layers)
+        top = min(layer.geometry()[1] for layer in self.layers)
+        right = max(layer.geometry()[0] + layer.geometry()[2] for layer in self.layers)
+        bottom = max(layer.geometry()[1] + layer.geometry()[3] for layer in self.layers)
+        return left, top, right, bottom
+
     def move_global(self, global_x, global_y):
         target = self.layer_at(global_x, global_y)
-        target_x, target_y, _w, _h = target.geometry()
-        x, y = self.clamp_to_layer(target, global_x - target_x, global_y - target_y)
+        target_x, target_y, target_w, target_h = target.geometry()
+        local_x = global_x - target_x
+        local_y = global_y - target_y
+        if 0 <= local_x < target_w and 0 <= local_y < target_h:
+            # 字幕落在某块屏幕内就严格跟随指针；只有整体布局的外边缘才限制最小可见，
+            # 屏与屏之间不钳制，跨屏时才不会在边界处跳一下
+            _left, _top, right, bottom = self.layout_bounds()
+            global_x = min(global_x, right - MIN_VISIBLE_WIDTH)
+            global_y = min(global_y, bottom - MIN_VISIBLE_HEIGHT)
+            local_x = max(0, global_x - target_x)
+            local_y = max(0, global_y - target_y)
+        else:
+            local_x, local_y = self.clamp_to_layer(target, local_x, local_y)
         if target is not self.layer:
             previous = self.layer
             self.layer = target
             # 只换文字，不动控件可见性：拖动中隐藏发起手势那块窗口的子控件会让
-            # GTK 结束这次手势，跨屏后指针位移就收不到了
-            previous.set_text("", "")
+            # GTK 结束这次手势，跨屏后指针位移就收不到了。先画新屏再清旧屏，减少闪烁。
             target.set_text(self.text_current, self.text_secondary)
-        self.pos_x, self.pos_y = x, y
-        target.place(x, y)
+            previous.set_text("", "")
+        self.pos_x, self.pos_y = local_x, local_y
+        target.place(local_x, local_y)
         # 拖动中不要改输入区域：清空发起手势那块窗口的 input region 会让合成器
         # 结束隐式抓取，跨屏后手势就收不到后续位移了。松手时 end_drag 再统一更新。
         if not self.dragging:
