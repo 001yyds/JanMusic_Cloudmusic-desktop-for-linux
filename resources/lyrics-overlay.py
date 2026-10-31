@@ -6,7 +6,7 @@ Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定�
 
 要点：
 - 每块显示器一个全屏透明层，但字幕始终只有一份（当前行 + 副行），只画在它所在的那块屏幕上
-- 同一时刻只有这一份字幕接收输入，其余屏幕完全穿透
+- 解锁时字幕外套一层半透明灰框，正中间是圆形拖动手柄；只有手柄占据输入区域
 - 锁定后全部图层点击穿透，只能从主程序解锁
 - 拖动把手势挂在「不动的全屏窗口」上，用 gesture 偏移计算位移
   （Wayland 不给全局指针坐标，窗口一动局部坐标就被抵消）
@@ -22,6 +22,7 @@ Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定�
 """
 
 import json
+import math
 import os
 import signal
 import sys
@@ -45,8 +46,11 @@ DEFAULT_CONFIG = {"x": 160, "y": 640, "monitor": 0, "locked": False, "font": 30}
 # 字幕最多可以拖到距离屏幕边缘这么近，保证还剩一部分可见、能继续抓住
 MIN_VISIBLE_WIDTH = 120
 MIN_VISIBLE_HEIGHT = 48
-# 点击区域比文字稍大一点，免得没点准就拖不动
-HIT_PADDING = 6
+# 解锁时字幕外面的灰色框与中心圆形拖动手柄
+FRAME_PAD = 12
+FRAME_RADIUS = 16
+HANDLE_SIZE = 40
+HANDLE_HIT = 48
 
 BASE_CSS = """
 window { background: transparent; }
@@ -137,11 +141,21 @@ class ScreenLayer:
         self.fixed = Gtk.Fixed()
         self.window.add(self.fixed)
 
+        self.frame_visible = False
+
+        # 灰色框用 DrawingArea 自己画：无子窗口的 Gtk.EventBox/Gtk.Box 不会绘制 CSS 背景
+        self.frame = Gtk.DrawingArea()
+        self.frame.connect("draw", self.draw_frame)
+        self.fixed.put(self.frame, 0, 0)
+
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        self.event_box = Gtk.EventBox()
-        self.event_box.set_visible_window(False)
-        self.event_box.add(self.box)
-        self.fixed.put(self.event_box, 0, 0)
+        self.fixed.put(self.box, 0, 0)
+
+        # 中心圆形拖动手柄：只有它可以发起拖动
+        self.handle = Gtk.DrawingArea()
+        self.handle.set_size_request(HANDLE_SIZE, HANDLE_SIZE)
+        self.handle.connect("draw", self.draw_handle)
+        self.fixed.put(self.handle, 0, 0)
 
         self.current_label = Gtk.Label(label="")
         self.current_label.set_name("lyric")
@@ -175,16 +189,89 @@ class ScreenLayer:
         self.secondary_label.set_visible(bool(secondary))
 
     def hit_size(self):
-        """字幕当前的绘制尺寸。
+        """文字本身的尺寸（不含灰色框的内边距）。
 
         用首选尺寸而不是 allocation：文字刚换过时 allocation 还没重新布局，
-        据此设置输入区域会出现「刚拖完一会儿抓不住」的情况。"""
-        width = self.event_box.get_preferred_width()[1]
-        height = self.event_box.get_preferred_height()[1]
+        据此计算手柄位置会出现「刚拖完一会儿抓不住」的情况。"""
+        width = self.box.get_preferred_width()[1]
+        height = self.box.get_preferred_height()[1]
         return max(width, 1), max(height, 1)
 
+    def set_frame_visible(self, visible):
+        """只切换绘制，不改变控件可见性——拖动中隐藏子控件会让手势中断。"""
+        visible = bool(visible)
+        if visible == self.frame_visible:
+            return
+        self.frame_visible = visible
+        self.frame.queue_draw()
+        self.handle.queue_draw()
+
+    def draw_frame(self, widget, cr):
+        if not self.frame_visible:
+            return False
+        allocation = widget.get_allocation()
+        width, height = allocation.width, allocation.height
+        if width <= 0 or height <= 0:
+            return False
+        self.rounded_rect(cr, 0.5, 0.5, width - 1, height - 1, FRAME_RADIUS)
+        cr.set_source_rgba(24 / 255, 24 / 255, 28 / 255, 0.42)
+        cr.fill_preserve()
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.20)
+        cr.set_line_width(1)
+        cr.stroke()
+        return False
+
+    def draw_handle(self, widget, cr):
+        if not self.frame_visible:
+            return False
+        allocation = widget.get_allocation()
+        radius = max(1.0, min(allocation.width, allocation.height) / 2 - 1)
+        center_x = allocation.width / 2
+        center_y = allocation.height / 2
+        cr.arc(center_x, center_y, radius, 0, math.pi * 2)
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.16)
+        cr.fill_preserve()
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.52)
+        cr.set_line_width(1.5)
+        cr.stroke()
+        return False
+
+    @staticmethod
+    def rounded_rect(cr, x, y, width, height, radius):
+        radius = min(radius, width / 2, height / 2)
+        cr.new_path()
+        cr.arc(x + radius, y + radius, radius, math.pi, math.pi * 1.5)
+        cr.arc(x + width - radius, y + radius, radius, math.pi * 1.5, math.pi * 2)
+        cr.arc(x + width - radius, y + height - radius, radius, 0, math.pi * 0.5)
+        cr.arc(x + radius, y + height - radius, radius, math.pi * 0.5, math.pi)
+        cr.close_path()
+
+    def handle_center(self, x, y):
+        """手柄圆心：跟文字中心重合，但夹在屏幕内，长歌词被裁掉时也能抓住。"""
+        width, height = self.hit_size()
+        _mx, _my, monitor_w, monitor_h = self.geometry()
+        half = HANDLE_SIZE // 2
+        center_x = int(x) + width // 2
+        center_y = int(y) + height // 2
+        center_x = min(max(center_x, half), max(half, monitor_w - half))
+        center_y = min(max(center_y, half), max(half, monitor_h - half))
+        return center_x, center_y
+
+    def handle_rect(self, x, y):
+        center_x, center_y = self.handle_center(x, y)
+        half = HANDLE_HIT // 2
+        return center_x - half, center_y - half, HANDLE_HIT, HANDLE_HIT
+
     def place(self, x, y):
-        self.fixed.move(self.event_box, int(x), int(y))
+        x, y = int(x), int(y)
+        # 文字左上角保持为 (x, y)，灰色框向外扩，手柄落在文字中心
+        width, height = self.hit_size()
+        self.frame.set_size_request(width + FRAME_PAD * 2, height + FRAME_PAD * 2)
+        self.fixed.move(self.frame, x - FRAME_PAD, y - FRAME_PAD)
+        self.fixed.move(self.box, x, y)
+        center_x, center_y = self.handle_center(x, y)
+        half = HANDLE_SIZE // 2
+        self.fixed.move(self.handle, center_x - half, center_y - half)
 
     # ---------- 拖动 ----------
 
@@ -262,30 +349,31 @@ class Overlay:
             gdk_window = layer.window.get_window()
             if gdk_window is None:
                 continue
-            if self.locked or layer is not self.layer:
+            if self.locked or layer is not self.layer or not self.has_text():
                 region = cairo.Region()
             else:
-                width, height = layer.hit_size()
-                region = cairo.Region(
-                    cairo.RectangleInt(
-                        self.pos_x - HIT_PADDING,
-                        self.pos_y - HIT_PADDING,
-                        width + HIT_PADDING * 2,
-                        height + HIT_PADDING * 2,
-                    )
-                )
+                x, y, width, height = layer.handle_rect(self.pos_x, self.pos_y)
+                region = cairo.Region(cairo.RectangleInt(x, y, width, height))
             gdk_window.input_shape_combine_region(region, 0, 0)
+            # 只改 input region 不会立刻提交给合成器；不触发一次重绘的话，
+            # 合成器会继续用旧区域，表现为「拖完/换行后有一段时间抓不住手柄」
+            layer.window.queue_draw()
         return False
+
+    def has_text(self):
+        return bool(self.text_current or self.text_secondary)
 
     def apply_visibility(self):
         """字幕只有一份：当前屏幕显示文字，其余屏幕清空。
 
-        控件本身始终可见（空标签不占空间）；拖动中切换可见性会打断手势。"""
+        解锁时给当前屏幕加灰色框和中心拖动手柄；锁定后只留文字、整层点击穿透。"""
         if not getattr(self, "layers", None) or not getattr(self, "layer", None):
             return
+        show_frame = not self.locked and self.has_text()
         for layer in self.layers:
             active = layer is self.layer
             layer.set_text(self.text_current if active else "", self.text_secondary if active else "")
+            layer.set_frame_visible(active and show_frame)
             if active:
                 layer.place(self.pos_x, self.pos_y)
 
@@ -371,10 +459,12 @@ class Overlay:
         if target is not self.layer:
             previous = self.layer
             self.layer = target
-            # 只换文字，不动控件可见性：拖动中隐藏发起手势那块窗口的子控件会让
+            # 只换文字与样式，不动控件可见性：拖动中隐藏发起手势那块窗口的子控件会让
             # GTK 结束这次手势，跨屏后指针位移就收不到了。先画新屏再清旧屏，减少闪烁。
             target.set_text(self.text_current, self.text_secondary)
             previous.set_text("", "")
+            target.set_frame_visible(not self.locked and self.has_text())
+            previous.set_frame_visible(False)
         self.pos_x, self.pos_y = local_x, local_y
         target.place(local_x, local_y)
         # 拖动中不要改输入区域：清空发起手势那块窗口的 input region 会让合成器
@@ -406,11 +496,14 @@ class Overlay:
                 self.config["font"] = int(payload["font"])
                 self.apply_font()
                 save_config(self.config)
+                # 字号变了，手柄的圆心也要跟着重新定位
+                self.apply_visibility()
                 GLib.idle_add(self.update_input_regions)
         elif cmd == "lock":
             self.locked = bool(payload.get("value"))
             self.config["locked"] = self.locked
             save_config(self.config)
+            self.apply_visibility()
             self.update_input_regions()
         elif cmd == "show":
             for layer in self.layers:
