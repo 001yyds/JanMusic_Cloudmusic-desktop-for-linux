@@ -444,6 +444,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   }
 }))
 
+// timeupdate 只有约 4Hz，歌词最多会晚 250ms；播放时用 20Hz 定时器跟随真实播放位置。
+// 主窗口关闭了 backgroundThrottling，最小化后桌面歌词也能保持同步。
+const TIME_TICK_MS = 50
+window.setInterval(() => {
+  if (audio.paused) return
+  const value = audio.currentTime
+  if (Math.abs(usePlayerStore.getState().time - value) >= 0.015) {
+    usePlayerStore.setState({ time: value })
+  }
+}, TIME_TICK_MS)
+
 audio.addEventListener('timeupdate', () => {
   usePlayerStore.setState({ time: audio.currentTime })
   if ('mediaSession' in navigator && Number.isFinite(audio.duration) && audio.duration > 0) {

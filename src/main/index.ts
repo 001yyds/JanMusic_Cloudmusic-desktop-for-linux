@@ -40,7 +40,9 @@ function createWindow(): void {
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
-      spellcheck: false
+      spellcheck: false,
+      // 最小化后仍需按 20Hz 推进播放时间，桌面歌词才不会在后台卡住
+      backgroundThrottling: false
     }
   })
 

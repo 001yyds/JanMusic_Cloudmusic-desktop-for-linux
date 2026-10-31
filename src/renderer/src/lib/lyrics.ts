@@ -8,6 +8,9 @@ export function parseLyric(lrc: string, translated = ''): LyricLine[] {
   const entries = new Map<number, LyricLine>()
   const credit =
     /(作词|作曲|编曲|制作|监制|录音|混音|母带|人声|和声|吉他|贝斯|鼓|键盘|弦乐|出品|发行|统筹|策划|OP|SP)[^:：]{0,8}[:：]/
+  // LRC 的 [offset:毫秒] 是整首歌的时间轴修正，正数表示歌词整体延后
+  const offsetTag = lrc.match(/\[offset:\s*([+-]?\d+)\s*\]/i)
+  const offset = offsetTag ? Number(offsetTag[1]) / 1000 : 0
 
   const consume = (raw: string, translation: boolean): void => {
     for (const line of raw.split('\n')) {
@@ -20,7 +23,7 @@ export function parseLyric(lrc: string, translated = ''): LyricLine[] {
         const minutes = Number(stamp[1])
         const seconds = Number(stamp[2])
         const fraction = stamp[3] ? Number(`0.${stamp[3]}`) : 0
-        const time = minutes * 60 + seconds + fraction
+        const time = minutes * 60 + seconds + fraction + offset
         if (translation) {
           const existing = entries.get(time)
           if (existing) existing.translation = text

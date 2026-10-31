@@ -297,7 +297,7 @@ export function SettingsPage(): React.JSX.Element {
                 desktopLyrics
                   ? desktopLyricsLocked
                     ? '已显示 · 已锁定（点击穿透）'
-                    : '已显示 · 拖动中间圆点'
+                    : '已显示 · 拖动字幕左侧圆点'
                   : '在桌面上显示同步歌词'
               }
             >

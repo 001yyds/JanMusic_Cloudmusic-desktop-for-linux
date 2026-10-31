@@ -6,7 +6,7 @@ Windows 版网易云的 desktop_lyric_window 用分层窗口 + 置顶 + 锁定�
 
 要点：
 - 每块显示器一个全屏透明层，但字幕始终只有一份（当前行 + 副行），只画在它所在的那块屏幕上
-- 解锁时字幕外套一层半透明灰框，正中间是圆形拖动手柄；只有手柄占据输入区域
+- 解锁时字幕外套一层半透明灰框，左侧压着一个圆形拖动手柄；只有手柄占据输入区域
 - 锁定后全部图层点击穿透，只能从主程序解锁
 - 拖动把手势挂在「不动的全屏窗口」上，用 gesture 偏移计算位移
   （Wayland 不给全局指针坐标，窗口一动局部坐标就被抵消）
@@ -46,7 +46,7 @@ DEFAULT_CONFIG = {"x": 160, "y": 640, "monitor": 0, "locked": False, "font": 30}
 # 字幕最多可以拖到距离屏幕边缘这么近，保证还剩一部分可见、能继续抓住
 MIN_VISIBLE_WIDTH = 120
 MIN_VISIBLE_HEIGHT = 48
-# 解锁时字幕外面的灰色框与中心圆形拖动手柄
+# 解锁时字幕外面的灰色框与左侧圆形拖动手柄
 FRAME_PAD = 12
 FRAME_RADIUS = 16
 HANDLE_SIZE = 40
@@ -229,9 +229,10 @@ class ScreenLayer:
         center_x = allocation.width / 2
         center_y = allocation.height / 2
         cr.arc(center_x, center_y, radius, 0, math.pi * 2)
-        cr.set_source_rgba(1.0, 1.0, 1.0, 0.16)
+        # 用较实的灰色圆盘盖在字幕上，明确表示「手柄在最上层」
+        cr.set_source_rgba(0.22, 0.22, 0.26, 0.88)
         cr.fill_preserve()
-        cr.set_source_rgba(1.0, 1.0, 1.0, 0.52)
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.72)
         cr.set_line_width(1.5)
         cr.stroke()
         return False
@@ -247,11 +248,11 @@ class ScreenLayer:
         cr.close_path()
 
     def handle_center(self, x, y):
-        """手柄圆心：跟文字中心重合，但夹在屏幕内，长歌词被裁掉时也能抓住。"""
-        width, height = self.hit_size()
+        """手柄圆心：左边缘对齐字幕左边缘（压在字幕上），垂直居中，并夹在屏幕内。"""
+        _width, height = self.hit_size()
         _mx, _my, monitor_w, monitor_h = self.geometry()
         half = HANDLE_SIZE // 2
-        center_x = int(x) + width // 2
+        center_x = int(x) + half
         center_y = int(y) + height // 2
         center_x = min(max(center_x, half), max(half, monitor_w - half))
         center_y = min(max(center_y, half), max(half, monitor_h - half))
